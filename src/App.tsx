@@ -1,5 +1,11 @@
 import { Suspense } from "react";
-import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useRoutes,
+} from "react-router-dom";
 import routes from "tempo-routes";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
@@ -14,8 +20,14 @@ import LeadDashboard from "./components/leads/LeadDashboard";
 import LeadPipeline from "./components/leads/LeadPipeline";
 import TasksListPage from "./components/leads/TasksListPage";
 import SettingsPage from "./components/settings/SettingsPage";
+import UserManagement from "./components/settings/UserManagement";
+import PermissionGuard from "./components/auth/PermissionGuard";
 import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./lib/theme-provider";
+import FranchisesLayout from "./components/franchises";
+import FranchisesList from "./components/franchises/FranchisesList";
+import FranchiseForm from "./components/franchises/FranchiseForm";
+import FranchiseDetail from "./components/franchises/FranchiseDetail";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -47,93 +59,161 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   return (
-    <>
-      {/* For the tempo routes */}
-      {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" />} />
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <LoginForm />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <SignUpForm />
+          </PublicRoute>
+        }
+      />
+      <Route path="/success" element={<Success />} />
 
+      {/* Leads Routes */}
+      <Route
+        path="/leads"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <LeadsLayout />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      >
+        <Route index element={<LeadDashboard />} />
+        <Route path="dashboard" element={<LeadDashboard />} />
+        <Route path="list" element={<LeadsList />} />
         <Route
-          path="/login"
+          path="new"
           element={
-            <PublicRoute>
-              <LoginForm />
-            </PublicRoute>
+            <PermissionGuard allowedRoles={["superadmin", "admin"]}>
+              <LeadForm />
+            </PermissionGuard>
           }
         />
-        <Route
-          path="/signup"
-          element={
-            <PublicRoute>
-              <SignUpForm />
-            </PublicRoute>
-          }
-        />
-        <Route path="/success" element={<Success />} />
+        <Route path="pipeline" element={<LeadPipeline />} />
+        <Route path="tasks" element={<TasksListPage />} />
+      </Route>
 
-        {/* Leads Routes */}
-        <Route
-          path="/leads"
-          element={
-            <PrivateRoute>
-              <AppLayout>
-                <LeadsLayout />
-              </AppLayout>
-            </PrivateRoute>
-          }
-        >
-          <Route index element={<LeadDashboard />} />
-          <Route path="dashboard" element={<LeadDashboard />} />
-          <Route path="list" element={<LeadsList />} />
-          <Route path="new" element={<LeadForm />} />
-          <Route path="pipeline" element={<LeadPipeline />} />
-          <Route path="tasks" element={<TasksListPage />} />
-        </Route>
+      <Route
+        path="/leads/:id"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <LeadDetail />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
 
-        <Route
-          path="/leads/:id"
-          element={
-            <PrivateRoute>
-              <AppLayout>
-                <LeadDetail />
-              </AppLayout>
-            </PrivateRoute>
-          }
-        />
+      {/* Settings Routes */}
+      <Route
+        path="/settings"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <SettingsPage />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/settings/users"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <PermissionGuard allowedRoles={["superadmin"]}>
+                <UserManagement />
+              </PermissionGuard>
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
 
-        {/* Settings Route */}
-        <Route
-          path="/settings"
-          element={
-            <PrivateRoute>
-              <AppLayout>
-                <SettingsPage />
-              </AppLayout>
-            </PrivateRoute>
-          }
-        />
+      {/* Franchises Routes */}
+      <Route
+        path="/franchises"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <FranchisesLayout />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      >
+        <Route index element={<FranchisesList />} />
+      </Route>
+      <Route
+        path="/franchises/new"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <FranchiseForm />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/franchises/:id"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <FranchiseDetail />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/franchises/edit/:id"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <FranchiseForm isEdit={true} />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
 
-        {/* Add this before the catchall route for Tempo */}
-        {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}
+      {/* Add this before the catchall route for Tempo */}
+      {import.meta.env.VITE_TEMPO === "true" && (
+        <Route path="/tempobook/*" element={<></>} />
+      )}
 
-        {/* Redirect all other routes to login */}
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </>
+      {/* Redirect all other routes to login */}
+      <Route path="*" element={<Navigate to="/login" />} />
+    </Routes>
   );
+}
+
+// Create a separate component for Tempo routes to ensure they're used within Router context
+function TempoRoutesWrapper() {
+  return import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
 }
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light">
-      <AuthProvider>
-        <Suspense fallback={<p>Cargando...</p>}>
-          <AppRoutes />
-          <Toaster />
-        </Suspense>
-      </AuthProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light">
+        <AuthProvider>
+          <Suspense fallback={<p>Cargando...</p>}>
+            <TempoRoutesWrapper />
+            <AppRoutes />
+            <Toaster />
+          </Suspense>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

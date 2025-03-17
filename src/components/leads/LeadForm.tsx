@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,24 +28,52 @@ import { useNavigate } from "react-router-dom";
 const formSchema = z.object({
   full_name: z
     .string()
-    .min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().min(6, { message: "Please enter a valid phone number." }),
-  location: z.string().min(2, { message: "Location is required." }),
+    .min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
+  email: z.string().email({ message: "Por favor, introduce un email válido." }),
+  phone: z
+    .string()
+    .min(6, { message: "Por favor, introduce un teléfono válido." }),
+  location: z.string().min(2, { message: "La ubicación es obligatoria." }),
   previous_experience: z.string().optional(),
   investment_capacity: z
     .string()
-    .min(1, { message: "Investment capacity is required." }),
-  source_channel: z.string().min(1, { message: "Source channel is required." }),
-  interest_level: z.string().min(1, { message: "Interest level is required." }),
+    .min(1, { message: "La disponibilidad de local es obligatoria." }),
+  source_channel: z
+    .string()
+    .min(1, { message: "El canal de origen es obligatorio." }),
+  interest_level: z
+    .string()
+    .min(1, { message: "El nivel de interés es obligatorio." }),
   additional_comments: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function LeadForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    async function checkUserRole() {
+      try {
+        const { data, error } = await supabase.rpc("get_current_user_role");
+
+        if (error) {
+          console.error("Error checking user role:", error);
+          return;
+        }
+
+        setUserRole(data);
+        setIsAuthorized(data === "superadmin" || data === "admin");
+      } catch (error) {
+        console.error("Error in checkUserRole:", error);
+      }
+    }
+
+    checkUserRole();
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,6 +89,21 @@ export default function LeadForm() {
       additional_comments: "",
     },
   });
+
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+        <h2 className="text-2xl font-bold mb-4">Acceso Restringido</h2>
+        <p className="text-gray-600 mb-4">
+          No tienes permisos para crear nuevos candidatos. Contacta con un
+          administrador si necesitas acceso.
+        </p>
+        <Button variant="outline" onClick={() => navigate("/leads/list")}>
+          Volver a la lista de candidatos
+        </Button>
+      </div>
+    );
+  }
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -91,14 +134,57 @@ export default function LeadForm() {
         .from("lead_details")
         .insert({
           lead_id: leadData.id,
-          previous_experience: values.previous_experience || "",
-          investment_capacity: values.investment_capacity,
-          source_channel: values.source_channel,
-          interest_level: parseInt(values.interest_level),
-          additional_comments: values.additional_comments || "",
+          previous_experience:
+            values.previous_experience !== undefined
+              ? values.previous_experience
+              : "",
+          investment_capacity:
+            values.investment_capacity !== undefined &&
+            values.investment_capacity !== ""
+              ? values.investment_capacity
+              : "no",
+          source_channel:
+            values.source_channel !== undefined && values.source_channel !== ""
+              ? values.source_channel
+              : "website",
+          interest_level:
+            values.interest_level !== undefined
+              ? parseInt(values.interest_level)
+              : 3,
+          additional_comments:
+            values.additional_comments !== undefined
+              ? values.additional_comments
+              : "",
           // Calculate a basic score based on interest level and investment capacity
           score: calculateLeadScore(values),
-        });
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select();
+
+      console.log("Lead details inserted with values:", {
+        previous_experience:
+          values.previous_experience !== undefined
+            ? values.previous_experience
+            : "",
+        investment_capacity:
+          values.investment_capacity !== undefined &&
+          values.investment_capacity !== ""
+            ? values.investment_capacity
+            : "no",
+        source_channel:
+          values.source_channel !== undefined && values.source_channel !== ""
+            ? values.source_channel
+            : "website",
+        interest_level:
+          values.interest_level !== undefined
+            ? parseInt(values.interest_level)
+            : 3,
+        additional_comments:
+          values.additional_comments !== undefined
+            ? values.additional_comments
+            : "",
+      });
 
       if (detailsError) {
         console.error("Error inserting lead details:", detailsError);
@@ -113,7 +199,7 @@ export default function LeadForm() {
         .insert({
           lead_id: leadData.id,
           status: "new_contact",
-          notes: "Lead created",
+          notes: "Candidato creado",
         })
         .select();
 
@@ -125,8 +211,8 @@ export default function LeadForm() {
       console.log("Status history inserted:", statusData);
 
       toast({
-        title: "Lead creado correctamente",
-        description: "El lead ha sido añadido al sistema.",
+        title: "Candidato creado correctamente",
+        description: "El candidato ha sido añadido al sistema.",
       });
 
       form.reset();
@@ -134,9 +220,9 @@ export default function LeadForm() {
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
-        title: "Error al crear el lead",
+        title: "Error al crear el candidato",
         description:
-          "Ha ocurrido un problema al crear el lead. Por favor, inténtalo de nuevo.",
+          "Ha ocurrido un problema al crear el candidato. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -166,12 +252,18 @@ export default function LeadForm() {
       score += 10;
     }
 
+    // Additional comments can add bonus points
+    if (values.additional_comments && values.additional_comments.length > 0) {
+      score += 5;
+    }
+
+    console.log("Calculated score:", score, "for values:", values);
     return score;
   }
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Registrar Nuevo Lead</h2>
+      <h2 className="text-2xl font-bold mb-6">Registrar Nuevo Candidato</h2>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -229,7 +321,7 @@ export default function LeadForm() {
                 <FormItem>
                   <FormLabel>Ubicación</FormLabel>
                   <FormControl>
-                    <Input placeholder="City, Country" {...field} />
+                    <Input placeholder="Ciudad, País" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -348,7 +440,7 @@ export default function LeadForm() {
                 <FormLabel>Comentarios Adicionales</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Cualquier información adicional sobre el lead"
+                    placeholder="Cualquier información adicional sobre el candidato"
                     {...field}
                   />
                 </FormControl>
@@ -358,7 +450,7 @@ export default function LeadForm() {
           />
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Enviando..." : "Registrar Lead"}
+            {isSubmitting ? "Enviando..." : "Registrar Candidato"}
           </Button>
         </form>
       </Form>

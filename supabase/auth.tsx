@@ -52,9 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Usuario creado exitosamente:", data.user.id);
 
         // Asegurarse de que el usuario también se crea en la tabla public.users
+        // Por defecto, los nuevos usuarios tienen el rol "user"
         const { error: userError } = await supabase.from("users").upsert({
           id: data.user.id,
           full_name: fullName,
+          email: email,
           avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
           role: "user",
         });
@@ -94,9 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             "Usuario no encontrado en la tabla public.users, creándolo ahora",
           );
 
-          // Si no existe, crearlo
+          // Si no existe, crearlo con rol de usuario por defecto
           const { error: insertError } = await supabase.from("users").insert({
             id: data.user.id,
+            email: email,
             full_name:
               data.user.user_metadata?.full_name || email.split("@")[0],
             avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,

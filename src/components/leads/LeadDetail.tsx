@@ -25,12 +25,14 @@ import {
   Pencil,
   MoreVertical,
 } from "lucide-react";
+import SendEmailDialog from "../email/SendEmailDialog";
 import { toast } from "@/components/ui/use-toast";
 import EditLeadForm from "./EditLeadForm";
 import DeleteLeadDialog from "./DeleteLeadDialog";
 import AddTaskDialog from "./AddTaskDialog";
 import AddCommunicationDialog from "./AddCommunicationDialog";
 import EditCommunicationDialog from "./EditCommunicationDialog";
+import UpdateLeadStatusDialog from "./UpdateLeadStatusDialog";
 import TasksList from "./TasksList";
 import {
   DropdownMenu,
@@ -94,6 +96,7 @@ export default function LeadDetail() {
   const navigate = useNavigate();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
@@ -111,6 +114,27 @@ export default function LeadDetail() {
     string | null
   >(null);
   const [isDeletingCommunication, setIsDeletingCommunication] = useState(false);
+  const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
+  const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
+
+  useEffect(() => {
+    async function checkUserRole() {
+      try {
+        const { data, error } = await supabase.rpc("get_current_user_role");
+
+        if (error) {
+          console.error("Error checking user role:", error);
+          return;
+        }
+
+        setUserRole(data);
+      } catch (error) {
+        console.error("Error in checkUserRole:", error);
+      }
+    }
+
+    checkUserRole();
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -122,6 +146,13 @@ export default function LeadDetail() {
     try {
       setLoading(true);
       console.log("Fetching lead details for ID:", leadId);
+
+      // Force refresh the data from the server with no cache
+      await supabase.auth.refreshSession();
+
+      // Clear any potential cache by using a timestamp parameter
+      const timestamp = new Date().getTime();
+      console.log(`Fetching with cache-busting timestamp: ${timestamp}`);
 
       const { data, error } = await supabase
         .from("leads")
@@ -136,8 +167,8 @@ export default function LeadDetail() {
         .eq("id", leadId)
         .single();
 
-      // Force refresh the data from the server
-      await supabase.auth.refreshSession();
+      console.log("Raw lead data from database:", data);
+      console.log("Raw lead_details from database:", data?.lead_details);
 
       if (error) {
         console.error("Error fetching lead:", error);
@@ -145,6 +176,7 @@ export default function LeadDetail() {
       }
 
       console.log("Lead data fetched:", data);
+      console.log("Lead details:", data.lead_details);
 
       // Sort status history by created_at in descending order
       const sortedStatusHistory = data.lead_status_history
@@ -175,8 +207,53 @@ export default function LeadDetail() {
         users: null,
       }));
 
+      console.log("Processed status history:", statusWithUsers);
+      console.log("Processed communications:", communicationsWithUsers);
+
+      // Ensure lead_details has all properties even if they're null
+      // Handle lead_details as an array or single object
+      const leadDetails =
+        Array.isArray(data.lead_details) && data.lead_details.length > 0
+          ? data.lead_details[0]
+          : data.lead_details || {};
+
+      const normalizedLeadDetails = {
+        previous_experience:
+          leadDetails.previous_experience !== null &&
+          leadDetails.previous_experience !== undefined
+            ? leadDetails.previous_experience
+            : "",
+        additional_comments:
+          leadDetails.additional_comments !== null &&
+          leadDetails.additional_comments !== undefined
+            ? leadDetails.additional_comments
+            : "",
+        investment_capacity:
+          leadDetails.investment_capacity !== null &&
+          leadDetails.investment_capacity !== undefined &&
+          leadDetails.investment_capacity !== ""
+            ? leadDetails.investment_capacity
+            : "no",
+        source_channel:
+          leadDetails.source_channel !== null &&
+          leadDetails.source_channel !== undefined &&
+          leadDetails.source_channel !== ""
+            ? leadDetails.source_channel
+            : "website",
+        interest_level:
+          leadDetails.interest_level !== null &&
+          leadDetails.interest_level !== undefined
+            ? leadDetails.interest_level
+            : 3,
+        score:
+          leadDetails.score !== null && leadDetails.score !== undefined
+            ? leadDetails.score
+            : 0,
+      };
+
       const processedLead = {
         ...data,
+        lead_details: normalizedLeadDetails,
         lead_status_history: statusWithUsers,
         communications: communicationsWithUsers,
       };
@@ -375,16 +452,20 @@ export default function LeadDetail() {
           <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Leads
         </Button>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => setShowEditForm(true)}>
-            <Edit className="mr-2 h-4 w-4" /> Editar
-          </Button>
-          <Button
-            variant="outline"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-          </Button>
+          {(userRole === "superadmin" || userRole === "admin") && (
+            <>
+              <Button variant="outline" onClick={() => setShowEditForm(true)}>
+                <Edit className="mr-2 h-4 w-4" /> Editar
+              </Button>
+              <Button
+                variant="outline"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -395,6 +476,26 @@ export default function LeadDetail() {
           isOpen={showDeleteDialog}
           onClose={() => setShowDeleteDialog(false)}
           onDeleted={handleLeadDeleted}
+        />
+      )}
+
+      {showUpdateStatusDialog && (
+        <UpdateLeadStatusDialog
+          leadId={lead.id}
+          currentStatus={lead.lead_status_history[0]?.status || "new_contact"}
+          isOpen={showUpdateStatusDialog}
+          onClose={() => setShowUpdateStatusDialog(false)}
+          onSuccess={() => fetchLeadDetails(id!)}
+        />
+      )}
+
+      {showSendEmailDialog && (
+        <SendEmailDialog
+          isOpen={showSendEmailDialog}
+          onClose={() => setShowSendEmailDialog(false)}
+          recipientEmail={lead.email}
+          recipientName={lead.full_name}
+          leadId={lead.id}
         />
       )}
 
@@ -510,7 +611,8 @@ export default function LeadDetail() {
                   <div className="flex items-center">
                     <User className="h-4 w-4 mr-2 text-muted-foreground" />
                     <span>
-                      Nivel de Interés: {lead.lead_details?.interest_level}/5
+                      Nivel de Interés: {lead.lead_details?.interest_level || 0}
+                      /5
                     </span>
                   </div>
                   <div className="flex items-center">
@@ -533,6 +635,12 @@ export default function LeadDetail() {
                       {lead.lead_details?.score || 0}
                     </Badge>
                   </div>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm">
+                      Canal de Origen:{" "}
+                      {lead.lead_details?.source_channel || "No especificado"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -542,8 +650,8 @@ export default function LeadDetail() {
                 <div>
                   <h3 className="font-medium mb-2">Experiencia Previa</h3>
                   <p className="text-muted-foreground">
-                    {lead.lead_details?.previous_experience &&
-                    lead.lead_details.previous_experience !== ""
+                    {lead.lead_details?.previous_experience !== null &&
+                    lead.lead_details?.previous_experience !== ""
                       ? lead.lead_details.previous_experience
                       : "No se proporcionó información"}
                   </p>
@@ -551,8 +659,8 @@ export default function LeadDetail() {
                 <div>
                   <h3 className="font-medium mb-2">Comentarios Adicionales</h3>
                   <p className="text-muted-foreground">
-                    {lead.lead_details?.additional_comments &&
-                    lead.lead_details.additional_comments !== ""
+                    {lead.lead_details?.additional_comments !== null &&
+                    lead.lead_details?.additional_comments !== ""
                       ? lead.lead_details.additional_comments
                       : "No se proporcionaron comentarios"}
                   </p>
@@ -729,43 +837,44 @@ export default function LeadDetail() {
               <CardTitle>Acciones</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button
-                className="w-full"
-                onClick={() => {
-                  toast({
-                    title: "Actualización de estado",
-                    description: "Funcionalidad en desarrollo",
-                  });
-                }}
-              >
-                Actualizar Estado
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowAddCommunicationDialog(true)}
-              >
-                Añadir Comunicación
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowAddTaskDialog(true)}
-              >
-                Programar Tarea
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  toast({
-                    title: "Enviar email",
-                    description: "Funcionalidad en desarrollo",
-                  });
-                }}
-              >
-                Enviar Email
-              </Button>
+              {userRole === "superadmin" || userRole === "admin" ? (
+                <>
+                  <Button
+                    className="w-full"
+                    onClick={() => setShowUpdateStatusDialog(true)}
+                  >
+                    Actualizar Estado
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowAddCommunicationDialog(true)}
+                  >
+                    Añadir Comunicación
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowAddTaskDialog(true)}
+                  >
+                    Programar Tarea
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowSendEmailDialog(true)}
+                  >
+                    Enviar Email
+                  </Button>
+                </>
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-md text-center">
+                  <p className="text-muted-foreground">Modo de solo lectura</p>
+                  <p className="text-xs mt-1">
+                    No tienes permisos para realizar acciones
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

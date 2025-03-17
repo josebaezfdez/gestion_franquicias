@@ -55,13 +55,11 @@ interface EditLeadFormProps {
   onCancel?: () => void;
 }
 
-export default function EditLeadForm({
-  leadId,
-  onSuccess,
-  onCancel,
-}: EditLeadFormProps) {
+function EditLeadForm({ leadId, onSuccess, onCancel }: EditLeadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({
@@ -78,6 +76,26 @@ export default function EditLeadForm({
       additional_comments: "",
     },
   });
+
+  useEffect(() => {
+    async function checkUserRole() {
+      try {
+        const { data, error } = await supabase.rpc("get_current_user_role");
+
+        if (error) {
+          console.error("Error checking user role:", error);
+          return;
+        }
+
+        setUserRole(data);
+        setIsAuthorized(data === "superadmin" || data === "admin");
+      } catch (error) {
+        console.error("Error in checkUserRole:", error);
+      }
+    }
+
+    checkUserRole();
+  }, []);
 
   useEffect(() => {
     const fetchLeadData = async () => {
@@ -98,6 +116,13 @@ export default function EditLeadForm({
 
         if (data) {
           console.log("Lead data loaded:", data);
+          console.log("Lead details loaded:", data.lead_details);
+
+          // Handle lead_details as an array or single object
+          const leadDetails =
+            Array.isArray(data.lead_details) && data.lead_details.length > 0
+              ? data.lead_details[0]
+              : data.lead_details || {};
 
           // Asegurarse de que todos los campos tengan valores por defecto
           const formData = {
@@ -105,14 +130,42 @@ export default function EditLeadForm({
             email: data.email || "",
             phone: data.phone || "",
             location: data.location || "",
-            previous_experience: data.lead_details?.previous_experience || "",
+            previous_experience:
+              leadDetails.previous_experience !== null &&
+              leadDetails.previous_experience !== undefined
+                ? leadDetails.previous_experience
+                : "",
             investment_capacity:
-              data.lead_details?.investment_capacity || "medium",
-            source_channel: data.lead_details?.source_channel || "website",
+              leadDetails.investment_capacity !== null &&
+              leadDetails.investment_capacity !== undefined &&
+              leadDetails.investment_capacity !== ""
+                ? leadDetails.investment_capacity
+                : "no",
+            source_channel:
+              leadDetails.source_channel !== null &&
+              leadDetails.source_channel !== undefined &&
+              leadDetails.source_channel !== ""
+                ? leadDetails.source_channel
+                : "website",
             interest_level:
-              data.lead_details?.interest_level?.toString() || "3",
-            additional_comments: data.lead_details?.additional_comments || "",
+              leadDetails.interest_level !== null &&
+              leadDetails.interest_level !== undefined
+                ? String(leadDetails.interest_level)
+                : "3",
+            additional_comments:
+              leadDetails.additional_comments !== null &&
+              leadDetails.additional_comments !== undefined
+                ? leadDetails.additional_comments
+                : "",
           };
+
+          console.log("Lead details loaded for form:", {
+            previous_experience: leadDetails.previous_experience,
+            investment_capacity: leadDetails.investment_capacity,
+            source_channel: leadDetails.source_channel,
+            interest_level: leadDetails.interest_level,
+            additional_comments: leadDetails.additional_comments,
+          });
 
           console.log("Form data to set:", formData);
           form.reset(formData);
@@ -136,6 +189,9 @@ export default function EditLeadForm({
     setIsSubmitting(true);
     try {
       console.log("Updating lead with values:", values);
+
+      // Force refresh the session to ensure we have the latest data
+      await supabase.auth.refreshSession();
 
       // Update leads table
       const { data: leadData, error: leadError } = await supabase
@@ -174,30 +230,72 @@ export default function EditLeadForm({
         detailsOperation = supabase
           .from("lead_details")
           .update({
-            previous_experience: values.previous_experience,
-            investment_capacity: values.investment_capacity,
-            source_channel: values.source_channel,
-            interest_level: parseInt(values.interest_level),
-            additional_comments: values.additional_comments,
+            previous_experience:
+              values.previous_experience !== undefined
+                ? values.previous_experience
+                : "",
+            investment_capacity:
+              values.investment_capacity !== undefined &&
+              values.investment_capacity !== ""
+                ? values.investment_capacity
+                : "no",
+            source_channel:
+              values.source_channel !== undefined &&
+              values.source_channel !== ""
+                ? values.source_channel
+                : "website",
+            interest_level:
+              values.interest_level !== undefined
+                ? parseInt(values.interest_level)
+                : 3,
+            additional_comments:
+              values.additional_comments !== undefined
+                ? values.additional_comments
+                : "",
             // Recalculate score
             score: calculateLeadScore(values),
+            // Add updated_at timestamp
+            updated_at: new Date().toISOString(),
           })
           .eq("lead_id", leadId);
       } else {
         // Insert new lead_details if it doesn't exist
         detailsOperation = supabase.from("lead_details").insert({
           lead_id: leadId,
-          previous_experience: values.previous_experience,
-          investment_capacity: values.investment_capacity,
-          source_channel: values.source_channel,
-          interest_level: parseInt(values.interest_level),
-          additional_comments: values.additional_comments,
+          previous_experience:
+            values.previous_experience !== undefined
+              ? values.previous_experience
+              : "",
+          investment_capacity:
+            values.investment_capacity !== undefined &&
+            values.investment_capacity !== ""
+              ? values.investment_capacity
+              : "no",
+          source_channel:
+            values.source_channel !== undefined && values.source_channel !== ""
+              ? values.source_channel
+              : "website",
+          interest_level:
+            values.interest_level !== undefined
+              ? parseInt(values.interest_level)
+              : 3,
+          additional_comments:
+            values.additional_comments !== undefined
+              ? values.additional_comments
+              : "",
           score: calculateLeadScore(values),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
       }
 
       const { data: detailsData, error: detailsError } =
         await detailsOperation.select();
+
+      console.log("Lead details operation result:", {
+        detailsData,
+        detailsError,
+      });
 
       if (detailsError) {
         console.error("Error updating lead details:", detailsError);
@@ -251,7 +349,31 @@ export default function EditLeadForm({
       score += 10;
     }
 
+    // Additional comments can add bonus points
+    if (values.additional_comments && values.additional_comments.length > 0) {
+      score += 5;
+    }
+
+    console.log("Calculated score:", score, "for values:", values);
     return score;
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+        <h2 className="text-2xl font-bold mb-4">Acceso Restringido</h2>
+        <p className="text-gray-600 mb-4">
+          No tienes permisos para editar leads. Contacta con un administrador si
+          necesitas acceso.
+        </p>
+        <Button
+          variant="outline"
+          onClick={onCancel || (() => navigate(`/leads/${leadId}`))}
+        >
+          Volver a detalles
+        </Button>
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -460,3 +582,5 @@ export default function EditLeadForm({
     </div>
   );
 }
+
+export default EditLeadForm;

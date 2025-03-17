@@ -10,7 +10,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import { LogIn } from "lucide-react";
 
@@ -18,11 +18,13 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       console.log("Intentando iniciar sesión con:", email);
       await signIn(email, password);
@@ -31,6 +33,8 @@ export default function LoginForm() {
     } catch (error) {
       console.error("Error de inicio de sesión:", error);
       setError("Correo electrónico o contraseña inválidos");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,17 +71,15 @@ export default function LoginForm() {
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full">
-              Iniciar Sesión
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center text-slate-600">
-            ¿No tienes una cuenta?{" "}
-            <Link to="/signup" className="text-primary hover:underline">
-              Regístrate
-            </Link>
+            Aplicación privada - Contacta con el administrador para obtener
+            acceso
           </div>
         </CardFooter>
       </Card>

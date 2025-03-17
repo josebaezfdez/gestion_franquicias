@@ -44,40 +44,127 @@ export type Database = {
           },
         ]
       }
+      email_settings: {
+        Row: {
+          created_at: string | null
+          from_email: string
+          from_name: string
+          id: string
+          smtp_host: string
+          smtp_password: string
+          smtp_port: number
+          smtp_secure: boolean
+          smtp_user: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          from_email: string
+          from_name: string
+          id?: string
+          smtp_host: string
+          smtp_password: string
+          smtp_port?: number
+          smtp_secure?: boolean
+          smtp_user: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          from_email?: string
+          from_name?: string
+          id?: string
+          smtp_host?: string
+          smtp_password?: string
+          smtp_port?: number
+          smtp_secure?: boolean
+          smtp_user?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      franchises: {
+        Row: {
+          address: string
+          city: string
+          contact_person: string
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          phone: string
+          province: string
+          tesis_code: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          contact_person: string
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          id?: string
+          name: string
+          phone: string
+          province: string
+          tesis_code?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          contact_person?: string
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          province?: string
+          tesis_code?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       lead_details: {
         Row: {
-          additional_comments: string | null
+          additional_comments: string
           created_at: string | null
           id: string
           interest_level: number
           investment_capacity: string
           lead_id: string
-          previous_experience: string | null
-          score: number | null
+          previous_experience: string
+          score: number
           source_channel: string
           updated_at: string | null
         }
         Insert: {
-          additional_comments?: string | null
+          additional_comments?: string
           created_at?: string | null
           id?: string
-          interest_level: number
-          investment_capacity: string
+          interest_level?: number
+          investment_capacity?: string
           lead_id: string
-          previous_experience?: string | null
-          score?: number | null
-          source_channel: string
+          previous_experience?: string
+          score?: number
+          source_channel?: string
           updated_at?: string | null
         }
         Update: {
-          additional_comments?: string | null
+          additional_comments?: string
           created_at?: string | null
           id?: string
           interest_level?: number
           investment_capacity?: string
           lead_id?: string
-          previous_experience?: string | null
-          score?: number | null
+          previous_experience?: string
+          score?: number
           source_channel?: string
           updated_at?: string | null
         }
@@ -210,6 +297,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          email: string
           full_name: string | null
           id: string
           role: string | null
@@ -218,6 +306,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          email: string
           full_name?: string | null
           id: string
           role?: string | null
@@ -226,6 +315,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string
           full_name?: string | null
           id?: string
           role?: string | null
@@ -238,7 +328,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_modify_communication: {
+        Args: {
+          communication_id: string
+        }
+        Returns: boolean
+      }
+      can_modify_lead: {
+        Args: {
+          lead_id: string
+        }
+        Returns: boolean
+      }
+      can_modify_task: {
+        Args: {
+          task_id: string
+        }
+        Returns: boolean
+      }
+      check_user_permission: {
+        Args: {
+          permission_name: string
+        }
+        Returns: boolean
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

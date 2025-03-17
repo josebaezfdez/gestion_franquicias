@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useLocation, useNavigate } from "react-router-dom";
 
-export default function LeadsLayout() {
+export function LeadsLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -39,7 +39,7 @@ export default function LeadsLayout() {
   };
 
   return (
-    <div className="container mx-auto py-4 px-4 md:px-6 h-full">
+    <div className="container mx-auto py-4 px-4 md:px-6 h-full bg-background">
       <Tabs
         value={getActiveTab()}
         onValueChange={handleTabChange}
@@ -50,7 +50,7 @@ export default function LeadsLayout() {
           <TabsTrigger value="list">Lista</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
-          <TabsTrigger value="new">Nuevo Lead</TabsTrigger>
+          <TabsTrigger value="new">Nuevo Candidato</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -60,3 +60,5 @@ export default function LeadsLayout() {
     </div>
   );
 }
+
+export default LeadsLayout;

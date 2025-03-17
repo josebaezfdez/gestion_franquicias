@@ -78,10 +78,13 @@ export default function LeadDashboard() {
         totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
 
       // Average score
-      const totalScore = processedLeads.reduce(
-        (sum, lead) => sum + (lead.lead_details?.score || 0),
-        0,
-      );
+      const totalScore = processedLeads.reduce((sum, lead) => {
+        // Check if lead_details is an array and get the first element's score
+        if (Array.isArray(lead.lead_details) && lead.lead_details.length > 0) {
+          return sum + (lead.lead_details[0].score || 0);
+        }
+        return sum + (lead.lead_details?.score || 0);
+      }, 0);
       const averageScore = totalLeads > 0 ? totalScore / totalLeads : 0;
 
       // Leads by status
@@ -97,34 +100,28 @@ export default function LeadDashboard() {
       // Leads by source
       const leadsBySource = processedLeads.reduce(
         (acc, lead) => {
-          let source = lead.lead_details?.source_channel || "unknown";
+          let source;
+          // Check if lead_details is an array and get the first element's source_channel
+          if (
+            Array.isArray(lead.lead_details) &&
+            lead.lead_details.length > 0
+          ) {
+            source = lead.lead_details[0].source_channel || "unknown";
+          } else {
+            source = lead.lead_details?.source_channel || "unknown";
+          }
+
           // Normalize empty strings to "unknown"
           if (source === "" || source === null || source === undefined)
             source = "unknown";
 
-          // Normalizar nombres de fuentes para visualización
-          const normalizedSource =
-            source === "social_media"
-              ? "social_media"
-              : source === "website"
-                ? "website"
-                : source === "referral"
-                  ? "referral"
-                  : source === "event"
-                    ? "event"
-                    : source === "advertisement"
-                      ? "advertisement"
-                      : source === "other"
-                        ? "other"
-                        : "unknown";
-
-          acc[normalizedSource] = (acc[normalizedSource] || 0) + 1;
+          acc[source] = (acc[source] || 0) + 1;
           return acc;
         },
         {} as Record<string, number>,
       );
 
-      console.log("Fuentes de leads procesadas:", leadsBySource);
+      console.log("Fuentes de candidatos procesadas:", leadsBySource);
 
       // Leads by location
       const leadsByLocation = processedLeads.reduce(
@@ -143,13 +140,25 @@ export default function LeadDashboard() {
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         )
         .slice(0, 5)
-        .map((lead) => ({
-          id: lead.id,
-          full_name: lead.full_name,
-          created_at: lead.created_at,
-          status: lead.latestStatus,
-          score: lead.lead_details?.score || 0,
-        }));
+        .map((lead) => {
+          let score = 0;
+          if (
+            Array.isArray(lead.lead_details) &&
+            lead.lead_details.length > 0
+          ) {
+            score = lead.lead_details[0].score || 0;
+          } else {
+            score = lead.lead_details?.score || 0;
+          }
+
+          return {
+            id: lead.id,
+            full_name: lead.full_name,
+            created_at: lead.created_at,
+            status: lead.latestStatus,
+            score: score,
+          };
+        });
 
       setStats({
         totalLeads,
@@ -228,6 +237,27 @@ export default function LeadDashboard() {
     }
   }
 
+  function getSourceChannelLabel(source: string | undefined) {
+    if (!source || source === "" || source === null) return "Desconocido";
+
+    switch (source) {
+      case "website":
+        return "Sitio Web";
+      case "referral":
+        return "Referencia";
+      case "social_media":
+        return "Redes Sociales";
+      case "event":
+        return "Evento";
+      case "advertisement":
+        return "Publicidad";
+      case "other":
+        return "Otro";
+      default:
+        return source;
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto p-6 text-center">Cargando panel...</div>
@@ -244,13 +274,15 @@ export default function LeadDashboard() {
 
   return (
     <div className="container mx-auto p-6" style={{ maxWidth: "1200px" }}>
-      <h2 className="text-3xl font-bold mb-6">Panel de Gestión de Leads</h2>
+      <h2 className="text-3xl font-bold mb-6">
+        Panel de Gestión de Candidatos
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total de Leads
+              Total de Candidatos
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -342,7 +374,7 @@ export default function LeadDashboard() {
                       <Badge className={getStatusColor(status)}>
                         {getStatusLabel(status)}
                       </Badge>
-                      <span className="ml-2">{count} leads</span>
+                      <span className="ml-2">{count} candidatos</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {((count / stats.totalLeads) * 100).toFixed(1)}%
@@ -360,7 +392,7 @@ export default function LeadDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Fuentes de Leads</CardTitle>
+            <CardTitle>Fuentes de Candidatos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -370,10 +402,10 @@ export default function LeadDashboard() {
                   <div key={source} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="capitalize">
-                        {source.replace("_", " ")}
+                        {getSourceChannelLabel(source || "unknown")}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {count} leads (
+                        {count} candidatos (
                         {((count / stats.totalLeads) * 100).toFixed(1)}%)
                       </span>
                     </div>
@@ -390,7 +422,7 @@ export default function LeadDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Leads Recientes</CardTitle>
+          <CardTitle>Candidatos Recientes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

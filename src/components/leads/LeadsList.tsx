@@ -4,8 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Plus, Phone, Mail, MapPin, Clock } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Plus,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import MassEmailDialog from "../email/MassEmailDialog";
 
 type Lead = {
   id: string;
@@ -27,8 +37,29 @@ type Lead = {
 export default function LeadsList() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showMassEmailDialog, setShowMassEmailDialog] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkUserRole() {
+      try {
+        const { data, error } = await supabase.rpc("get_current_user_role");
+
+        if (error) {
+          console.error("Error checking user role:", error);
+          return;
+        }
+
+        setUserRole(data);
+      } catch (error) {
+        console.error("Error in checkUserRole:", error);
+      }
+    }
+
+    checkUserRole();
+  }, []);
 
   useEffect(() => {
     fetchLeads();
@@ -139,13 +170,36 @@ export default function LeadsList() {
     }
   }
 
+  function getSourceChannelLabel(source: string | undefined) {
+    if (!source || source === "" || source === null) return "Desconocido";
+
+    switch (source) {
+      case "website":
+        return "Sitio Web";
+      case "referral":
+        return "Referencia";
+      case "social_media":
+        return "Redes Sociales";
+      case "event":
+        return "Evento";
+      case "advertisement":
+        return "Publicidad";
+      case "other":
+        return "Otro";
+      default:
+        return source;
+    }
+  }
+
   return (
     <div className="container mx-auto p-6" style={{ maxWidth: "1200px" }}>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Gestión de Leads</h2>
-        <Button onClick={() => navigate("/leads/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Lead
-        </Button>
+        <h2 className="text-2xl font-bold">Gestión de Candidatos</h2>
+        {(userRole === "superadmin" || userRole === "admin") && (
+          <Button onClick={() => navigate("/leads/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Candidato
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center space-x-2 mb-6">
@@ -153,7 +207,7 @@ export default function LeadsList() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Buscar leads..."
+            placeholder="Buscar candidatos..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -162,13 +216,25 @@ export default function LeadsList() {
         <Button variant="outline">
           <Filter className="mr-2 h-4 w-4" /> Filtrar
         </Button>
+        {(userRole === "superadmin" || userRole === "admin") && (
+          <Button onClick={() => setShowMassEmailDialog(true)}>
+            <Send className="mr-2 h-4 w-4" /> Email Masivo
+          </Button>
+        )}
       </div>
 
+      {showMassEmailDialog && (
+        <MassEmailDialog
+          isOpen={showMassEmailDialog}
+          onClose={() => setShowMassEmailDialog(false)}
+        />
+      )}
+
       {loading ? (
-        <div className="text-center py-10">Cargando leads...</div>
+        <div className="text-center py-10">Cargando candidatos...</div>
       ) : filteredLeads.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-muted-foreground">No se encontraron leads</p>
+          <p className="text-muted-foreground">No se encontraron candidatos</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -219,15 +285,28 @@ export default function LeadsList() {
                   <div>
                     <span className="text-xs text-gray-500">Fuente:</span>
                     <Badge variant="outline" className="ml-2">
-                      {lead.lead_details?.source_channel || "Desconocido"}
+                      {getSourceChannelLabel(
+                        Array.isArray(lead.lead_details) &&
+                          lead.lead_details.length > 0
+                          ? lead.lead_details[0].source_channel
+                          : lead.lead_details?.source_channel || "unknown",
+                      )}
                     </Badge>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Puntuación:</span>
                     <Badge
-                      className={`ml-2 ${getScoreColor(lead.lead_details?.score || 0)}`}
+                      className={`ml-2 ${getScoreColor(
+                        Array.isArray(lead.lead_details) &&
+                          lead.lead_details.length > 0
+                          ? lead.lead_details[0].score || 0
+                          : lead.lead_details?.score || 0,
+                      )}`}
                     >
-                      {lead.lead_details?.score || 0}
+                      {Array.isArray(lead.lead_details) &&
+                      lead.lead_details.length > 0
+                        ? lead.lead_details[0].score || 0
+                        : lead.lead_details?.score || 0}
                     </Badge>
                   </div>
                 </div>
