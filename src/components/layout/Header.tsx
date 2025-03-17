@@ -12,7 +12,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-[#1E2836] text-white py-2 px-4 flex justify-between items-center">
+    <header className="bg-[#1E2836] text-white py-2 px-4 flex justify-between items-center fixed top-0 w-full z-50">
       <div>
         <img
           src="https://albroksa.com/wp-content/uploads/2022/11/logo_albrok_blanco_transp.png"

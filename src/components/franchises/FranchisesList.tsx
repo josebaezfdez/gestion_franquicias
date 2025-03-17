@@ -26,10 +26,12 @@ import {
   Phone,
   Mail,
   Globe,
+  Upload,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ImportFranchisesDialog from "./ImportFranchisesDialog";
 
 type Franchise = {
   id: string;
@@ -49,6 +51,7 @@ export default function FranchisesList() {
   const [franchises, setFranchises] = useState<Franchise[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -97,10 +100,23 @@ export default function FranchisesList() {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Franquicias en Vigor</h1>
-        <Button onClick={() => navigate("/franchises/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Nueva Franquicia
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowImportDialog(true)}>
+            <Upload className="mr-2 h-4 w-4" /> Importar CSV
+          </Button>
+          <Button onClick={() => navigate("/franchises/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Nueva Franquicia
+          </Button>
+        </div>
       </div>
+
+      {showImportDialog && (
+        <ImportFranchisesDialog
+          isOpen={showImportDialog}
+          onClose={() => setShowImportDialog(false)}
+          onSuccess={fetchFranchises}
+        />
+      )}
 
       <div className="mb-6">
         <div className="relative">

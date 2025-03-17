@@ -82,7 +82,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <div className="flex flex-1 pt-16">
+      <div className="flex flex-1 pt-16 mt-2">
         {/* Sidebar */}
         <div
           className={`fixed top-16 left-0 h-[calc(100vh-64px)] z-40 bg-white border-r transform transition-all duration-200 ease-in-out ${sidebarCollapsed ? "w-16" : "w-[300px]"}`}
