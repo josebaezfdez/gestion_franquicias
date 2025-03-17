@@ -110,6 +110,7 @@ export default function EditUserDialog({
         .update({
           full_name: values.full_name,
           role: values.role,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
 

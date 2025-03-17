@@ -100,6 +100,17 @@ export default function LeadPipeline() {
     }
   }, [leads]);
 
+  // Add a debounced refresh function to ensure UI is updated
+  useEffect(() => {
+    const refreshTimer = setTimeout(() => {
+      if (leads.length > 0) {
+        organizeLeadsByStage();
+      }
+    }, 500); // Refresh after drag operations have settled
+
+    return () => clearTimeout(refreshTimer);
+  }, [leadsByStage]);
+
   async function fetchLeads() {
     try {
       setLoading(true);
@@ -197,12 +208,18 @@ export default function LeadPipeline() {
     const newStatus = destination.droppableId;
 
     try {
+      // Get the current user ID
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      const userId = currentUser?.id;
+
       // Update the lead status in the database
       const { error } = await supabase.from("lead_status_history").insert({
         lead_id: leadId,
         status: newStatus,
         notes: `Candidato movido a la etapa ${getStageNameById(newStatus)}`,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
+        created_by: userId,
         created_at: new Date().toISOString(),
       });
 
@@ -217,6 +234,27 @@ export default function LeadPipeline() {
       });
 
       setLeads(updatedLeads);
+
+      // Update the leadsByStage state directly for immediate UI update
+      const updatedLeadsByStage = { ...leadsByStage };
+
+      // Remove the lead from its source stage
+      updatedLeadsByStage[source.droppableId] = updatedLeadsByStage[
+        source.droppableId
+      ].filter((lead) => lead.id !== leadId);
+
+      // Find the lead object to move
+      const leadToMove = leads.find((lead) => lead.id === leadId);
+      if (leadToMove) {
+        // Add the lead to its destination stage with updated status
+        const updatedLead = { ...leadToMove, status: newStatus };
+        updatedLeadsByStage[newStatus] = [
+          ...(updatedLeadsByStage[newStatus] || []),
+          updatedLead,
+        ];
+
+        setLeadsByStage(updatedLeadsByStage);
+      }
 
       toast({
         title: "Estado actualizado",

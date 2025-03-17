@@ -70,6 +70,18 @@ export default function AddUserDialog({
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
+      // First, check if the email already exists
+      const { data: existingUsers, error: checkError } = await supabase
+        .from("users")
+        .select("email")
+        .eq("email", values.email);
+
+      if (checkError) throw checkError;
+
+      if (existingUsers && existingUsers.length > 0) {
+        throw new Error("Este email ya está registrado en el sistema");
+      }
+
       // Use the edge function to create a user instead of admin API
       const { data, error } = await supabase.functions.invoke("create-user", {
         body: {
@@ -80,19 +92,37 @@ export default function AddUserDialog({
         },
       });
 
-      if (error) throw error;
-      if (!data || !data.userId) throw new Error("No se pudo crear el usuario");
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(
+          error.message ||
+            "Error al crear el usuario en el sistema de autenticación",
+        );
+      }
+
+      if (!data || !data.userId) {
+        throw new Error(
+          "No se pudo crear el usuario - no se recibió ID de usuario",
+        );
+      }
 
       // Create user in public.users with role
-      const { error: userError } = await supabase.from("users").upsert({
+      const { error: userError } = await supabase.from("users").insert({
         id: data.userId,
         email: values.email,
         full_name: values.full_name,
         role: values.role,
         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${values.email}`,
+        created_at: new Date().toISOString(),
       });
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error("Database error:", userError);
+        throw new Error(
+          userError.message ||
+            "Error al guardar el usuario en la base de datos",
+        );
+      }
 
       toast({
         title: "Usuario creado",

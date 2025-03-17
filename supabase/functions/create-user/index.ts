@@ -6,6 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 serve(async (req) => {
@@ -34,6 +35,25 @@ serve(async (req) => {
       );
     }
 
+    // Check if user already exists in auth.users
+    const { data: existingUser, error: checkError } =
+      await supabase.auth.admin.listUsers();
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    const userExists = existingUser.users.some((user) => user.email === email);
+    if (userExists) {
+      return new Response(
+        JSON.stringify({ error: "User with this email already exists" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     // Create the user
     const { data, error } = await supabase.auth.admin.createUser({
       email,
@@ -45,6 +65,13 @@ serve(async (req) => {
     if (error) {
       throw error;
     }
+
+    // Verify user was created and has an ID
+    if (!data || !data.user || !data.user.id) {
+      throw new Error("User created but no ID was returned");
+    }
+
+    console.log("User created successfully with ID:", data.user.id);
 
     return new Response(
       JSON.stringify({ success: true, userId: data.user.id }),

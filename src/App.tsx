@@ -198,7 +198,9 @@ function AppRoutes() {
 
 // Create a separate component for Tempo routes to ensure they're used within Router context
 function TempoRoutesWrapper() {
-  return import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
+  const tempoRoutes =
+    import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
+  return <>{tempoRoutes}</>;
 }
 
 function App() {

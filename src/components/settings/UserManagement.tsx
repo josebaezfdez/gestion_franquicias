@@ -88,20 +88,21 @@ export default function UserManagement() {
         throw new Error("No puedes eliminar tu propio usuario");
       }
 
-      // First delete from public.users to avoid foreign key constraints
+      // First call the edge function to delete from auth.users
+      // This is important to do first to ensure we don't have orphaned auth users
+      const { error } = await supabase.functions.invoke("delete-user", {
+        body: { userId: selectedUser.id },
+      });
+
+      if (error) throw error;
+
+      // Then delete from public.users
       const { error: publicUserError } = await supabase
         .from("users")
         .delete()
         .eq("id", selectedUser.id);
 
       if (publicUserError) throw publicUserError;
-
-      // Then delete from auth.users
-      // Note: We're using a direct API call instead of admin.deleteUser
-      // because the admin API requires special permissions
-      const { error } = await supabase.functions.invoke("delete-user", {
-        body: { userId: selectedUser.id },
-      });
 
       if (error) throw error;
 

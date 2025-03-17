@@ -6,6 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 serve(async (req) => {
@@ -34,12 +35,29 @@ serve(async (req) => {
       );
     }
 
+    // Check if user exists before trying to delete
+    const { data: userData, error: userError } =
+      await supabase.auth.admin.getUserById(userId);
+
+    if (userError) {
+      throw userError;
+    }
+
+    if (!userData || !userData.user) {
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Delete the user
     const { error } = await supabase.auth.admin.deleteUser(userId);
 
     if (error) {
       throw error;
     }
+
+    console.log("User deleted successfully:", userId);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

@@ -6,6 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 serve(async (req) => {
@@ -34,11 +35,29 @@ serve(async (req) => {
       );
     }
 
+    // Check if user exists before trying to update
+    const { data: userData, error: userError } =
+      await supabase.auth.admin.getUserById(userId);
+
+    if (userError) {
+      throw userError;
+    }
+
+    if (!userData || !userData.user) {
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const updateData: any = {};
 
     // Add user metadata if fullName is provided
     if (fullName) {
-      updateData.user_metadata = { full_name: fullName };
+      updateData.user_metadata = {
+        ...userData.user.user_metadata,
+        full_name: fullName,
+      };
     }
 
     // Add password if provided
@@ -55,6 +74,8 @@ serve(async (req) => {
     if (error) {
       throw error;
     }
+
+    console.log("User updated successfully:", userId);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
