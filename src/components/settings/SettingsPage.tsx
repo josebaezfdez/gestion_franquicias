@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailSettingsForm from "./EmailSettingsForm";
 import AccountSettings from "./AccountSettings";
+import CreateDefaultUsers from "./CreateDefaultUsers";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
@@ -48,6 +49,9 @@ export default function SettingsPage() {
         <TabsList className="mb-4">
           <TabsTrigger value="account">Cuenta</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
+          {userRole === "superadmin" && (
+            <TabsTrigger value="system">Sistema</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="account" className="space-y-4">
@@ -57,6 +61,12 @@ export default function SettingsPage() {
         <TabsContent value="email" className="space-y-4">
           <EmailSettingsForm />
         </TabsContent>
+
+        {userRole === "superadmin" && (
+          <TabsContent value="system" className="space-y-4">
+            <CreateDefaultUsers />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

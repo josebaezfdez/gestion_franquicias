@@ -118,8 +118,9 @@ function AppRoutes() {
       />
 
       {/* Settings Routes */}
+      <Route path="/settings" element={<Navigate to="/settings/account" />} />
       <Route
-        path="/settings"
+        path="/settings/account"
         element={
           <PrivateRoute>
             <AppLayout>
@@ -198,9 +199,16 @@ function AppRoutes() {
 
 // Create a separate component for Tempo routes to ensure they're used within Router context
 function TempoRoutesWrapper() {
-  const tempoRoutes =
-    import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
-  return <>{tempoRoutes}</>;
+  // Only use tempo routes if VITE_TEMPO is true
+  if (import.meta.env.VITE_TEMPO === "true") {
+    try {
+      return useRoutes(routes);
+    } catch (error) {
+      console.error("Error in TempoRoutesWrapper:", error);
+      return null;
+    }
+  }
+  return null;
 }
 
 function App() {

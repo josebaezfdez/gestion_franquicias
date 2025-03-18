@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: email,
           avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
           role: "user",
+          created_at: new Date().toISOString(),
         });
 
         if (userError) {
@@ -104,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               data.user.user_metadata?.full_name || email.split("@")[0],
             avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
             role: "user",
+            created_at: new Date().toISOString(),
           });
 
           if (insertError) {

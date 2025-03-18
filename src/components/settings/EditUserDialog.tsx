@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -66,6 +65,7 @@ export default function EditUserDialog({
 }: EditUserDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user: currentUser } = useAuth();
+  const isSelfEdit = currentUser?.id === user.id;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,35 +76,20 @@ export default function EditUserDialog({
     },
   });
 
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        full_name: user.full_name || "",
+        role: user.role || "",
+        password: "",
+      });
+    }
+  }, [user, form]);
+
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      // Use edge function to update user metadata and password if needed
-      const updateData: any = {};
-
-      if (values.full_name !== user.full_name) {
-        updateData.fullName = values.full_name;
-      }
-
-      if (values.password) {
-        updateData.password = values.password;
-      }
-
-      if (Object.keys(updateData).length > 0) {
-        const { error: updateError } = await supabase.functions.invoke(
-          "update-user",
-          {
-            body: {
-              userId: user.id,
-              ...updateData,
-            },
-          },
-        );
-
-        if (updateError) throw updateError;
-      }
-
-      // Update user in public.users
+      // Update user in public.users table
       const { error: userError } = await supabase
         .from("users")
         .update({
@@ -115,6 +100,49 @@ export default function EditUserDialog({
         .eq("id", user.id);
 
       if (userError) throw userError;
+
+      // Update user metadata if current user is updating themselves
+      if (isSelfEdit) {
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { full_name: values.full_name },
+        });
+
+        if (updateError) throw updateError;
+      }
+
+      // If password is provided, update it
+      if (values.password && values.password.length >= 8) {
+        try {
+          // Call the update-user edge function to update the password
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                fullName: values.full_name,
+                password: values.password,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Error updating user");
+          }
+        } catch (passwordError) {
+          console.error("Error updating password:", passwordError);
+          throw new Error(
+            passwordError instanceof Error
+              ? passwordError.message
+              : "Error al actualizar la contraseña",
+          );
+        }
+      }
 
       toast({
         title: "Usuario actualizado",
@@ -136,9 +164,6 @@ export default function EditUserDialog({
       setIsSubmitting(false);
     }
   }
-
-  // Check if current user is editing themselves
-  const isSelfEdit = user.id === currentUser?.id;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -175,7 +200,6 @@ export default function EditUserDialog({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={isSelfEdit} // Can't change own role
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -190,41 +214,33 @@ export default function EditUserDialog({
                       <SelectItem value="user">Usuario</SelectItem>
                     </SelectContent>
                   </Select>
-                  {isSelfEdit && (
-                    <p className="text-sm text-muted-foreground">
-                      No puedes cambiar tu propio rol
-                    </p>
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nueva Contraseña (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Dejar en blanco para no cambiar"
-                      type="password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {isSelfEdit && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nueva Contraseña (opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Dejar en blanco para mantener la actual"
+                        type="password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -237,7 +253,7 @@ export default function EditUserDialog({
                   "Guardar Cambios"
                 )}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>
