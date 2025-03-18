@@ -88,21 +88,36 @@ export default function UserManagement() {
         throw new Error("No puedes eliminar tu propio usuario");
       }
 
-      // Delete from public.users first
+      // Use the supabase.functions.invoke method with the correct function name
+      const { data, error } = await supabase.functions.invoke("delete-admin", {
+        body: {
+          userId: selectedUser.id,
+        },
+      });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Error al eliminar el usuario");
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || "Error al eliminar el usuario");
+      }
+
+      // Delete from public.users as well (in case the edge function didn't do it)
       const { error: publicUserError } = await supabase
         .from("users")
         .delete()
         .eq("id", selectedUser.id);
 
-      if (publicUserError) throw publicUserError;
-
-      // We can't delete from auth.users directly with client-side code
-      // This would normally require admin access or a server-side function
-      // For now, we'll just remove from the public.users table
+      if (publicUserError) {
+        console.warn("Error deleting from public.users:", publicUserError);
+        // Continue anyway as the auth user was deleted
+      }
 
       toast({
         title: "Usuario eliminado",
-        description: "El usuario ha sido eliminado de la tabla de usuarios",
+        description: "El usuario ha sido eliminado completamente del sistema",
       });
 
       fetchUsers();

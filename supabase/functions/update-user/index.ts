@@ -7,6 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Credentials": "true",
 };
 
 serve(async (req) => {
@@ -22,7 +23,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the request body
-    const { userId, fullName, password } = await req.json();
+    const { userId, fullName, email, password } = await req.json();
 
     // Validate required fields
     if (!userId) {
@@ -63,6 +64,11 @@ serve(async (req) => {
     // Add password if provided
     if (password) {
       updateData.password = password;
+    }
+
+    // Add email if provided
+    if (email) {
+      updateData.email = email;
     }
 
     // Update the user

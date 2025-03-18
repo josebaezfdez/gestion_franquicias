@@ -20,15 +20,25 @@ serve(async (req) => {
     // Create a Supabase client with the service role key
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_KEY") || "";
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing Supabase environment variables");
+    }
+
+    console.log("Supabase URL:", supabaseUrl);
+    console.log("Service Key available:", !!supabaseServiceKey);
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the request body
     const { userId } = await req.json();
 
+    console.log("Request data:", { userId });
+
     // Validate required fields
     if (!userId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "Missing required userId field" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -36,41 +46,46 @@ serve(async (req) => {
       );
     }
 
-    // Check if user exists before trying to delete
-    const { data: userData, error: userError } =
-      await supabase.auth.admin.getUserById(userId);
+    // First delete from public.users table
+    console.log("Deleting user from public.users table:", userId);
+    const { error: publicUserError } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", userId);
 
-    if (userError) {
-      throw userError;
+    if (publicUserError) {
+      console.error("Error deleting from public.users:", publicUserError);
+      // Continue anyway to try to delete from auth
     }
 
-    if (!userData || !userData.user) {
-      return new Response(JSON.stringify({ error: "User not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Then delete from auth.users
+    console.log("Deleting user from auth.users:", userId);
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
-    // Delete the user
-    const { error } = await supabase.auth.admin.deleteUser(userId);
-
-    if (error) {
-      throw error;
+    if (authError) {
+      console.error("Error deleting from auth.users:", authError);
+      throw authError;
     }
 
     console.log("User deleted successfully:", userId);
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: true, message: "User deleted successfully" }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
+    );
   } catch (error) {
     console.error("Error deleting user:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to delete user" }),
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       {
-        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
       },
     );
   }

@@ -1,6 +1,4 @@
-// Follow this setup guide to integrate the Deno runtime into your application:
-// https://deno.com/manual/getting_started/setup_your_environment
-
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.6";
 
 const corsHeaders = {
@@ -12,10 +10,10 @@ const corsHeaders = {
   "Access-Control-Allow-Credentials": "true",
 };
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
-    return new Response("ok", { status: 200, headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders, status: 200 });
   }
 
   try {
@@ -76,7 +74,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create the user
+    // Create the user using admin API
     console.log("Creating user:", email);
     const { data, error } = await supabase.auth.admin.createUser({
       email,

@@ -58,46 +58,42 @@ export default function AddUserDirectForm({
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      // First, check if the email already exists
-      const { data: existingUsers, error: checkError } = await supabase
-        .from("users")
-        .select("email")
-        .eq("email", values.email);
+      console.log("Creating user using edge function:", values.email);
 
-      if (checkError) throw checkError;
+      console.log("Attempting to create user with:", {
+        email: values.email,
+        password: "[REDACTED]",
+        full_name: values.full_name,
+        role: values.role,
+      });
 
-      if (existingUsers && existingUsers.length > 0) {
-        throw new Error("Este email ya está registrado en el sistema");
-      }
-
-      console.log("Creating user via edge function:", values.email);
-
-      // Use the create-user edge function instead of direct signUp
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+      // Use the edge function to create the user with admin privileges
+      const { data, error } = await supabase.functions.invoke(
+        "create-user-admin",
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
+          body: {
             email: values.email,
             password: values.password,
-            fullName: values.full_name,
+            full_name: values.full_name,
             role: values.role,
-          }),
+          },
         },
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response from create-user function:", errorData);
-        throw new Error(errorData.error || "Error al crear el usuario");
+      console.log("Edge function response:", { data, error });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Error al crear el usuario");
       }
 
-      const result = await response.json();
-      console.log("User created successfully:", result);
+      if (!data || !data.success) {
+        throw new Error(
+          data?.error || "No se pudo crear el usuario en el sistema",
+        );
+      }
+
+      console.log("User created successfully:", data);
 
       toast({
         title: "Usuario creado",

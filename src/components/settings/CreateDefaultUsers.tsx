@@ -44,10 +44,10 @@ export default function CreateDefaultUsers() {
 
       const results = [];
 
-      // Crear cada usuario individualmente usando signUp directamente
+      // Crear cada usuario individualmente usando el Edge Function
       for (const user of users) {
         try {
-          console.log(`Creando usuario: ${user.email}`);
+          console.log(`Creando usuario: ${user.email} usando Edge Function`);
 
           // Verificar si el usuario ya existe
           const { data: existingUsers } = await supabase
@@ -65,65 +65,56 @@ export default function CreateDefaultUsers() {
             continue;
           }
 
-          // Crear el usuario directamente con Auth API
-          const { data, error } = await supabase.auth.signUp({
-            email: user.email,
-            password: user.password,
-            options: {
-              data: {
+          // Usar el Edge Function para crear el usuario
+          const { data, error } = await supabase.functions.invoke(
+            "create-user-admin",
+            {
+              body: {
+                email: user.email,
+                password: user.password,
                 full_name: user.fullName,
+                role: user.role,
               },
             },
-          });
+          );
+
+          console.log(`Respuesta del Edge Function para ${user.email}:`, data);
 
           if (error) {
-            console.error(`Error al crear usuario ${user.email}:`, error);
-            results.push({
-              email: user.email,
-              status: "error",
-              message: error.message || "Error desconocido",
-            });
-            continue;
-          }
-
-          if (!data.user) {
-            console.error(`No se pudo crear el usuario ${user.email}`);
-            results.push({
-              email: user.email,
-              status: "error",
-              message: "No se pudo crear el usuario",
-            });
-            continue;
-          }
-
-          // Crear el usuario en la tabla users
-          const { error: userError } = await supabase.from("users").insert({
-            id: data.user.id,
-            email: user.email,
-            full_name: user.fullName,
-            role: user.role,
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-            created_at: new Date().toISOString(),
-          });
-
-          if (userError) {
             console.error(
-              `Error al crear usuario en tabla users ${user.email}:`,
-              userError,
+              `Error al invocar Edge Function para ${user.email}:`,
+              error,
             );
             results.push({
               email: user.email,
-              status: "partial",
-              message: `Auth user created but failed to create in public.users: ${userError.message}`,
+              status: "error",
+              message: error.message || "Error al invocar Edge Function",
             });
-          } else {
-            console.log(`Usuario creado correctamente: ${user.email}`);
+            continue;
+          }
+
+          if (!data || !data.success) {
+            console.error(
+              `Error en respuesta del Edge Function para ${user.email}:`,
+              data?.error || "Respuesta inválida",
+            );
             results.push({
               email: user.email,
-              status: "success",
-              message: "Usuario creado correctamente",
+              status: "error",
+              message: data?.error || "Error en la creación del usuario",
             });
+            continue;
           }
+
+          console.log(
+            `Usuario creado correctamente: ${user.email} con ID: ${data.userId}`,
+          );
+          results.push({
+            email: user.email,
+            status: "success",
+            message: "Usuario creado correctamente",
+            userId: data.userId,
+          });
         } catch (userError) {
           console.error(
             `Error inesperado al crear usuario ${user.email}:`,

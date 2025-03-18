@@ -35,6 +35,7 @@ const formSchema = z.object({
   full_name: z
     .string()
     .min(2, { message: "El nombre debe tener al menos 2 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
   role: z.string().min(1, { message: "Debes seleccionar un rol" }),
   password: z
     .string()
@@ -71,6 +72,7 @@ export default function EditUserDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: user.full_name || "",
+      email: user.email || "",
       role: user.role || "",
       password: "",
     },
@@ -80,6 +82,7 @@ export default function EditUserDialog({
     if (user) {
       form.reset({
         full_name: user.full_name || "",
+        email: user.email || "",
         role: user.role || "",
         password: "",
       });
@@ -89,11 +92,15 @@ export default function EditUserDialog({
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
+      // Check if email has changed
+      const emailChanged = values.email !== user.email;
+
       // Update user in public.users table
       const { error: userError } = await supabase
         .from("users")
         .update({
           full_name: values.full_name,
+          email: values.email,
           role: values.role,
           updated_at: new Date().toISOString(),
         })
@@ -110,29 +117,32 @@ export default function EditUserDialog({
         if (updateError) throw updateError;
       }
 
-      // If password is provided, update it
-      if (values.password && values.password.length >= 8) {
+      // If password is provided or email changed, update it
+      if ((values.password && values.password.length >= 8) || emailChanged) {
         try {
-          // Call the update-user edge function to update the password
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user`,
+          // Call the update-admin edge function using supabase.functions.invoke
+          const { data, error } = await supabase.functions.invoke(
+            "update-admin",
             {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              },
-              body: JSON.stringify({
+              body: {
                 userId: user.id,
                 fullName: values.full_name,
-                password: values.password,
-              }),
+                email: emailChanged ? values.email : undefined,
+                password:
+                  values.password && values.password.length >= 8
+                    ? values.password
+                    : undefined,
+              },
             },
           );
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Error updating user");
+          if (error) {
+            console.error("Edge function error:", error);
+            throw new Error(error.message || "Error updating user");
+          }
+
+          if (!data || !data.success) {
+            throw new Error(data?.error || "Error updating user");
           }
         } catch (passwordError) {
           console.error("Error updating password:", passwordError);
@@ -185,6 +195,24 @@ export default function EditUserDialog({
                   <FormLabel>Nombre Completo</FormLabel>
                   <FormControl>
                     <Input placeholder="Juan Pérez" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="usuario@ejemplo.com"
+                      type="email"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

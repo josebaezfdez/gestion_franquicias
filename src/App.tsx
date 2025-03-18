@@ -198,16 +198,8 @@ function AppRoutes() {
 }
 
 // Create a separate component for Tempo routes to ensure they're used within Router context
+// Completely disable TempoRoutesWrapper to avoid conflicts
 function TempoRoutesWrapper() {
-  // Only use tempo routes if VITE_TEMPO is true
-  if (import.meta.env.VITE_TEMPO === "true") {
-    try {
-      return useRoutes(routes);
-    } catch (error) {
-      console.error("Error in TempoRoutesWrapper:", error);
-      return null;
-    }
-  }
   return null;
 }
 
