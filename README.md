@@ -1,30 +1,33 @@
-# React + TypeScript + Vite
+# Gestión de Franquiciados - Albroksa
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gestión de leads y franquicias para Albroksa.
 
-Currently, two official plugins are available:
+## Configuración
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Copia el archivo `.env.example` a `.env`
+2. Configura las variables de entorno con tus credenciales de Supabase
+3. Instala las dependencias: `npm install`
+4. Inicia el servidor de desarrollo: `npm run dev`
 
-## Expanding the ESLint configuration
+## Variables de Entorno Requeridas
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- `VITE_SUPABASE_URL`: URL de tu proyecto Supabase
+- `VITE_SUPABASE_ANON_KEY`: Clave anónima de Supabase
 
-- Configure the top-level `parserOptions` property like this:
+## Producción
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+Para construir la aplicación para producción:
+
+```bash
+npm run build
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Los archivos se generarán en la carpeta `dist/`
+
+## Usuarios por Defecto
+
+Los usuarios deben ser creados a través de la interfaz de administración en `/settings/users`
+
+## Licencia
+
+© 2025 Albroksa - Todos los derechos reservados

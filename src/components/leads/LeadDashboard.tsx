@@ -30,9 +30,11 @@ export default function LeadDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!fetchingRef.current) {
+    if (!hasFetchedRef.current && !fetchingRef.current) {
+      hasFetchedRef.current = true;
       fetchDashboardStats();
     }
   }, []);
