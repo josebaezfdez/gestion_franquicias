@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Lock,
   Unlock,
+  GitBranch,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
@@ -198,7 +199,7 @@ export default function LeadPipeline() {
     if (!isAuthorized) {
       toast({
         title: "Permiso denegado",
-        description: "No tienes permisos para mover candidatos en el pipeline",
+        description: "No tienes permisos para mover leads en el pipeline",
         variant: "destructive",
       });
       return;
@@ -248,7 +249,7 @@ export default function LeadPipeline() {
       const { error } = await supabase.from("lead_status_history").insert({
         lead_id: leadId,
         status: newStatus,
-        notes: `Candidato movido a la etapa ${getStageNameById(newStatus)}`,
+        notes: `Lead movido a la etapa ${getStageNameById(newStatus)}`,
         created_by: userId,
         created_at: new Date().toISOString(),
       });
@@ -257,13 +258,13 @@ export default function LeadPipeline() {
 
       toast({
         title: "Estado actualizado",
-        description: `Candidato movido a ${getStageNameById(newStatus)}`,
+        description: `Lead movido a ${getStageNameById(newStatus)}`,
       });
     } catch (error) {
       console.error("Error updating lead status:", error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar el estado del candidato",
+        description: "No se pudo actualizar el estado del lead",
         variant: "destructive",
       });
       // Refresh the data to ensure UI is in sync with database
@@ -326,71 +327,79 @@ export default function LeadPipeline() {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
         <span className="ml-2">Cargando pipeline...</span>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6" style={{ maxWidth: "1600px" }}>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">Pipeline de Candidatos</h2>
-          <p className="text-muted-foreground mt-1">
-            {leads.length} candidatos en total • Arrastra y suelta para mover
-            candidatos entre etapas
-          </p>
+    <div className="h-full bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+          <GitBranch className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
         </div>
-        <div className="flex items-center space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowHelp(!showHelp)}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Mostrar/ocultar ayuda</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Pipeline de Leads</h1>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                {leads.length} leads en total
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowHelp(!showHelp)}
+                      className="rounded-lg"
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Mostrar/ocultar ayuda</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="cursor-default"
-                >
-                  {isAuthorized ? (
-                    <Unlock className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Lock className="h-4 w-4 text-amber-600" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  {isAuthorized
-                    ? "Tienes permisos para mover candidatos"
-                    : "Modo de solo lectura - No puedes mover candidatos"}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="cursor-default rounded-lg"
+                    >
+                      {isAuthorized ? (
+                        <Unlock className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-amber-600" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {isAuthorized
+                        ? "Tienes permisos para mover leads"
+                        : "Modo de solo lectura - No puedes mover leads"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
         </div>
       </div>
 
       {showHelp && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-blue-50 border-b border-blue-200 px-8 py-4">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
+            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
             <div>
               <h3 className="font-medium text-blue-800">
                 Cómo usar el Pipeline
@@ -401,22 +410,22 @@ export default function LeadPipeline() {
                 </li>
                 <li>
                   • Haz clic en una tarjeta para ver los detalles completos del
-                  candidato
+                  lead
                 </li>
                 {isAuthorized ? (
                   <li>
-                    • Arrastra y suelta las tarjetas para mover candidatos entre
+                    • Arrastra y suelta las tarjetas para mover leads entre
                     etapas
                   </li>
                 ) : (
                   <li>
-                    • Solo los administradores pueden mover candidatos entre
+                    • Solo los administradores pueden mover leads entre
                     etapas
                   </li>
                 )}
                 <li>
                   • Los colores de las etiquetas indican el nivel de interés del
-                  candidato
+                  lead
                 </li>
               </ul>
             </div>
@@ -426,35 +435,22 @@ export default function LeadPipeline() {
 
       {isDroppableEnabled ? (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="overflow-x-auto pb-4">
+          <div className="overflow-x-auto h-[calc(100vh-200px)] p-6">
             <div className="flex space-x-4" style={{ minWidth: "1400px" }}>
               {stages.map((stage) => (
                 <div
                   key={stage.id}
-                  className="flex flex-col"
-                  style={{ width: "250px", minWidth: "250px" }}
+                  className="flex flex-col bg-gray-100 rounded-xl"
+                  style={{ width: "280px", minWidth: "280px" }}
                 >
-                  <div
-                    className="rounded-t-lg p-3 border border-b-0 border-gray-200"
-                    style={{
-                      backgroundColor: `${stage.color}10`,
-                      borderColor: `${stage.color}30`,
-                    }}
-                  >
+                  <div className="p-4 border-b border-gray-200 bg-white rounded-t-xl">
                     <div className="flex items-center justify-between">
-                      <h3
-                        className="font-medium"
-                        style={{ color: stage.color }}
-                      >
+                      <h3 className="font-semibold text-gray-900 text-sm">
                         {stage.name}
                       </h3>
                       <Badge
-                        variant="outline"
-                        className="ml-1"
-                        style={{
-                          borderColor: `${stage.color}40`,
-                          color: stage.color,
-                        }}
+                        variant="secondary"
+                        className="ml-2 bg-gray-200 text-gray-700 rounded-full"
                       >
                         {leadsByStage[stage.id]?.length || 0}
                       </Badge>
@@ -462,16 +458,18 @@ export default function LeadPipeline() {
                   </div>
 
                   <Droppable droppableId={stage.id} key={stage.id}>
-                    {(provided) => (
+                    {(provided, snapshot) => (
                       <div
                         {...provided.droppableProps}
                         ref={provided.innerRef}
-                        className="bg-gray-50 rounded-b-lg p-2 border border-gray-200 flex-1 min-h-[500px] overflow-y-auto"
-                        style={{ borderColor: `${stage.color}30` }}
+                        className={`p-3 flex-1 overflow-y-auto rounded-b-xl transition-colors ${
+                          snapshot.isDraggingOver ? "bg-gray-200" : "bg-gray-100"
+                        }`}
+                        style={{ minHeight: "500px" }}
                       >
                         {leadsByStage[stage.id]?.length === 0 && (
-                          <div className="flex flex-col items-center justify-center h-24 text-center p-4 text-sm text-muted-foreground">
-                            <p>No hay candidatos en esta etapa</p>
+                          <div className="flex flex-col items-center justify-center h-24 text-center p-4 text-sm text-gray-400">
+                            <p>No hay leads</p>
                           </div>
                         )}
 
@@ -488,21 +486,21 @@ export default function LeadPipeline() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`mb-2 ${isAuthorized ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} hover:shadow-md transition-shadow ${snapshot.isDragging ? "shadow-lg" : ""}`}
+                                  className={`mb-3 ${isAuthorized ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} hover:shadow-lg transition-all border-0 ${snapshot.isDragging ? "shadow-2xl rotate-2" : "shadow-sm"}`}
                                   onClick={() => navigate(`/leads/${lead.id}`)}
                                 >
-                                  <CardContent className="p-3">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <div className="flex items-center">
-                                        <Avatar className="h-6 w-6 mr-2">
+                                  <CardContent className="p-4">
+                                    <div className="flex items-start justify-between mb-3">
+                                      <div className="flex items-center flex-1">
+                                        <Avatar className="h-8 w-8 mr-2">
                                           <AvatarImage
                                             src={`https://api.dicebear.com/7.x/initials/svg?seed=${lead.full_name}`}
                                           />
-                                          <AvatarFallback>
+                                          <AvatarFallback className="bg-red-100 text-red-600 text-xs">
                                             {lead.full_name.charAt(0)}
                                           </AvatarFallback>
                                         </Avatar>
-                                        <h4 className="font-medium text-sm">
+                                        <h4 className="font-semibold text-sm text-gray-900">
                                           {lead.full_name}
                                         </h4>
                                       </div>
@@ -511,39 +509,32 @@ export default function LeadPipeline() {
                                         <Badge
                                           className={`${getInterestLevelColor(
                                             lead.lead_details[0].interest_level,
-                                          )} ml-2`}
+                                          )} ml-2 text-xs rounded-full`}
                                         >
-                                          Interés:{" "}
                                           {lead.lead_details[0].interest_level}
                                         </Badge>
                                       )}
                                     </div>
 
-                                    <div className="text-xs text-gray-500 space-y-1">
+                                    <div className="text-xs text-gray-600 space-y-2">
                                       <div className="flex items-center">
-                                        <Mail className="h-3 w-3 mr-1" />
+                                        <Mail className="h-3.5 w-3.5 mr-2 text-gray-400" />
                                         <span className="truncate">
                                           {lead.email}
                                         </span>
                                       </div>
                                       <div className="flex items-center">
-                                        <Phone className="h-3 w-3 mr-1" />
+                                        <Phone className="h-3.5 w-3.5 mr-2 text-gray-400" />
                                         <span>{lead.phone}</span>
                                       </div>
                                       <div className="flex items-center">
-                                        <User className="h-3 w-3 mr-1" />
+                                        <User className="h-3.5 w-3.5 mr-2 text-gray-400" />
                                         <span>{lead.location}</span>
-                                      </div>
-                                      <div className="flex items-center">
-                                        <Calendar className="h-3 w-3 mr-1" />
-                                        <span>
-                                          {formatDate(lead.created_at)}
-                                        </span>
                                       </div>
                                     </div>
 
-                                    <div className="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center">
-                                      <span className="text-xs">
+                                    <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                                      <span className="text-xs text-gray-500">
                                         {getSourceChannelLabel(
                                           lead.lead_details?.[0]
                                             ?.source_channel,
@@ -552,12 +543,12 @@ export default function LeadPipeline() {
 
                                       {lead.lead_details?.[0]?.score && (
                                         <div className="flex items-center">
-                                          <span className="text-xs font-medium mr-1">
+                                          <span className="text-xs font-semibold text-gray-700 mr-2">
                                             {lead.lead_details[0].score}
                                           </span>
                                           <div className="w-16 bg-gray-200 rounded-full h-1.5">
                                             <div
-                                              className="h-1.5 rounded-full"
+                                              className="h-1.5 rounded-full bg-red-600"
                                               style={{
                                                 width: `${Math.min(
                                                   (lead.lead_details[0].score /
@@ -565,7 +556,6 @@ export default function LeadPipeline() {
                                                     100,
                                                   100,
                                                 )}%`,
-                                                backgroundColor: stage.color,
                                               }}
                                             ></div>
                                           </div>
@@ -588,7 +578,7 @@ export default function LeadPipeline() {
         </DragDropContext>
       ) : (
         <div className="flex justify-center items-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-red-600" />
           <span className="ml-2">Preparando pipeline...</span>
         </div>
       )}

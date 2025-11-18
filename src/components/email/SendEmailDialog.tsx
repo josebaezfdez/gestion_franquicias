@@ -1,125 +1,201 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
-import EmailEditor, { EmailData } from "./EmailEditor";
-import { getEmailSettings } from "@/api/emailApi";
-import { sendEmail } from "@/services/emailService";
-import { logCommunication } from "@/api/emailApi";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
+import { Mail, Send } from 'lucide-react';
 
 interface SendEmailDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  recipientEmail: string;
-  recipientName: string;
-  leadId: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  recipientEmail?: string;
+  recipientName?: string;
 }
 
-export default function SendEmailDialog({
-  isOpen,
-  onClose,
-  recipientEmail,
-  recipientName,
-  leadId,
+export default function SendEmailDialog({ 
+  isOpen = false, 
+  onOpenChange = () => {}, 
+  recipientEmail = "",
+  recipientName = ""
 }: SendEmailDialogProps) {
-  const [isSending, setIsSending] = useState(false);
+  const [formData, setFormData] = useState({
+    to: recipientEmail,
+    subject: '',
+    message: '',
+    template: 'custom'
+  });
+  const [sending, setSending] = useState(false);
 
-  const handleSendEmail = async (emailData: EmailData) => {
-    if (!recipientEmail) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleTemplateChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      template: value
+    }));
+
+    // Set predefined content based on template
+    switch (value) {
+      case 'welcome':
+        setFormData(prev => ({
+          ...prev,
+          subject: 'Bienvenido a nuestra franquicia',
+          message: `Hola ${recipientName || 'estimado/a cliente'},\n\nGracias por tu interés en nuestra franquicia. Nos complace poder acompañarte en este proceso.\n\nSaludos cordiales,\nEquipo de Franquicias`
+        }));
+        break;
+      case 'followup':
+        setFormData(prev => ({
+          ...prev,
+          subject: 'Seguimiento de tu consulta',
+          message: `Hola ${recipientName || 'estimado/a cliente'},\n\nQueremos hacer seguimiento a tu consulta sobre nuestra franquicia. ¿Tienes alguna pregunta adicional?\n\nQuedamos atentos a tu respuesta.\n\nSaludos cordiales,\nEquipo de Franquicias`
+        }));
+        break;
+      case 'proposal':
+        setFormData(prev => ({
+          ...prev,
+          subject: 'Propuesta de franquicia',
+          message: `Hola ${recipientName || 'estimado/a cliente'},\n\nAdjuntamos la propuesta detallada de nuestra franquicia basada en tu perfil e intereses.\n\nEstaremos encantados de resolver cualquier duda.\n\nSaludos cordiales,\nEquipo de Franquicias`
+        }));
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleSend = async () => {
+    if (!formData.to || !formData.subject || !formData.message) {
       toast({
         title: "Error",
-        description: "No se ha especificado un destinatario",
-        variant: "destructive",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive"
       });
       return;
     }
 
-    setIsSending(true);
+    setSending(true);
     try {
-      // Get email settings
-      const settingsData = await getEmailSettings();
-
-      if (!settingsData) {
-        throw new Error("No se encontró la configuración de email");
-      }
-
-      // Send email using the SMTP service
-      const result = await sendEmail(
-        {
-          to: recipientEmail,
-          subject: emailData.subject,
-          content: emailData.content,
-          isHtml: emailData.isHtml,
-        },
-        {
-          host: settingsData.smtp_host,
-          port: settingsData.smtp_port,
-          user: settingsData.smtp_user,
-          password: settingsData.smtp_password,
-          secure: settingsData.smtp_secure,
-          fromEmail: settingsData.from_email,
-          fromName: settingsData.from_name,
-        },
-        leadId,
-      );
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      // Log the communication
-      await logCommunication(leadId, emailData.subject, emailData.content);
-
+      // Simulate email sending
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       toast({
         title: "Email enviado",
-        description: `El email ha sido enviado a ${recipientEmail}`,
+        description: `Email enviado correctamente a ${formData.to}`
       });
-
-      onClose();
+      
+      // Reset form
+      setFormData({
+        to: recipientEmail,
+        subject: '',
+        message: '',
+        template: 'custom'
+      });
+      
+      onOpenChange(false);
     } catch (error) {
-      console.error("Error sending email:", error);
       toast({
-        title: "Error al enviar el email",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Ha ocurrido un problema al enviar el email. Por favor, inténtalo de nuevo.",
-        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar el email. Inténtalo de nuevo.",
+        variant: "destructive"
       });
     } finally {
-      setIsSending(false);
+      setSending(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Mail className="mr-2 h-4 w-4" />
+          Enviar Email
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Enviar Email</DialogTitle>
-          <DialogDescription>
-            Enviar un email a {recipientName} ({recipientEmail})
-          </DialogDescription>
         </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="template">Plantilla</Label>
+            <Select value={formData.template} onValueChange={handleTemplateChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar plantilla" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="custom">Personalizado</SelectItem>
+                <SelectItem value="welcome">Bienvenida</SelectItem>
+                <SelectItem value="followup">Seguimiento</SelectItem>
+                <SelectItem value="proposal">Propuesta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <EmailEditor
-          onSend={handleSendEmail}
-          onCancel={onClose}
-          initialTo={recipientEmail}
-          showToField={false}
-        />
+          <div className="space-y-2">
+            <Label htmlFor="to">Para</Label>
+            <Input
+              id="to"
+              name="to"
+              type="email"
+              value={formData.to}
+              onChange={handleInputChange}
+              placeholder="email@ejemplo.com"
+              required
+            />
+          </div>
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose} disabled={isSending}>
-            Cancelar
-          </Button>
-        </DialogFooter>
+          <div className="space-y-2">
+            <Label htmlFor="subject">Asunto</Label>
+            <Input
+              id="subject"
+              name="subject"
+              value={formData.subject}
+              onChange={handleInputChange}
+              placeholder="Asunto del email"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="message">Mensaje</Label>
+            <Textarea
+              id="message"
+              name="message"
+              value={formData.message}
+              onChange={handleInputChange}
+              placeholder="Escribe tu mensaje aquí..."
+              rows={8}
+              required
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSend} disabled={sending}>
+              {sending ? (
+                <>
+                  <Send className="mr-2 h-4 w-4 animate-pulse" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

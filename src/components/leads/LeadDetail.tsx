@@ -25,7 +25,6 @@ import {
   Pencil,
   MoreVertical,
 } from "lucide-react";
-import SendEmailDialog from "../email/SendEmailDialog";
 import { toast } from "@/components/ui/use-toast";
 import EditLeadForm from "./EditLeadForm";
 import DeleteLeadDialog from "./DeleteLeadDialog";
@@ -115,7 +114,6 @@ export default function LeadDetail() {
   >(null);
   const [isDeletingCommunication, setIsDeletingCommunication] = useState(false);
   const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
-  const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
 
   useEffect(() => {
     async function checkUserRole() {
@@ -408,9 +406,9 @@ export default function LeadDetail() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        <span>Cargando detalles del lead...</span>
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+        <span className="ml-2">Cargando detalles del proyecto...</span>
       </div>
     );
   }
@@ -418,9 +416,9 @@ export default function LeadDetail() {
   if (!lead) {
     return (
       <div className="container mx-auto p-6 text-center">
-        <p>Lead no encontrado</p>
+        <p>Proyecto no encontrado</p>
         <Button onClick={() => navigate("/leads")} className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Leads
+          <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Proyectos
         </Button>
       </div>
     );
@@ -428,498 +426,502 @@ export default function LeadDetail() {
 
   if (showEditForm) {
     return (
-      <div className="container mx-auto p-6">
-        <Button
-          variant="ghost"
-          onClick={() => setShowEditForm(false)}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Detalles
-        </Button>
-        <EditLeadForm
-          leadId={lead.id}
-          onSuccess={handleLeadUpdated}
-          onCancel={() => setShowEditForm(false)}
-        />
+      <div className="h-full bg-gray-50">
+        <div className="bg-white border-b border-gray-200 px-8 py-6">
+          <Button
+            variant="ghost"
+            onClick={() => setShowEditForm(false)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Detalles
+          </Button>
+        </div>
+        <div className="p-8">
+          <EditLeadForm
+            leadId={lead.id}
+            onSuccess={handleLeadUpdated}
+            onCancel={() => setShowEditForm(false)}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <Button variant="ghost" onClick={() => navigate("/leads")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Leads
-        </Button>
-        <div className="flex space-x-2">
-          {(userRole === "superadmin" || userRole === "admin") && (
-            <>
-              <Button variant="outline" onClick={() => setShowEditForm(true)}>
-                <Edit className="mr-2 h-4 w-4" /> Editar
-              </Button>
-              <Button
-                variant="outline"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-              </Button>
-            </>
-          )}
+    <div className="h-full bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-8 py-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate("/leads/list")}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Volver
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{lead.full_name}</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Añadido el {formatDate(lead.created_at)}
+              </p>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            {(userRole === "superadmin" || userRole === "admin") && (
+              <>
+                <Button variant="outline" onClick={() => setShowEditForm(true)}>
+                  <Edit className="mr-2 h-4 w-4" /> Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {showDeleteDialog && (
-        <DeleteLeadDialog
-          leadId={lead.id}
-          leadName={lead.full_name}
-          isOpen={showDeleteDialog}
-          onClose={() => setShowDeleteDialog(false)}
-          onDeleted={handleLeadDeleted}
-        />
-      )}
+      <div className="p-8">
+        {showDeleteDialog && (
+          <DeleteLeadDialog
+            leadId={lead.id}
+            leadName={lead.full_name}
+            isOpen={showDeleteDialog}
+            onClose={() => setShowDeleteDialog(false)}
+            onDeleted={handleLeadDeleted}
+          />
+        )}
 
-      {showUpdateStatusDialog && (
-        <UpdateLeadStatusDialog
-          leadId={lead.id}
-          currentStatus={lead.lead_status_history[0]?.status || "new_contact"}
-          isOpen={showUpdateStatusDialog}
-          onClose={() => setShowUpdateStatusDialog(false)}
-          onSuccess={() => fetchLeadDetails(id!)}
-        />
-      )}
+        {showUpdateStatusDialog && (
+          <UpdateLeadStatusDialog
+            leadId={lead.id}
+            currentStatus={lead.lead_status_history[0]?.status || "new_contact"}
+            isOpen={showUpdateStatusDialog}
+            onClose={() => setShowUpdateStatusDialog(false)}
+            onSuccess={() => fetchLeadDetails(id!)}
+          />
+        )}
 
-      {showSendEmailDialog && (
-        <SendEmailDialog
-          isOpen={showSendEmailDialog}
-          onClose={() => setShowSendEmailDialog(false)}
-          recipientEmail={lead.email}
-          recipientName={lead.full_name}
-          leadId={lead.id}
-        />
-      )}
+        {showAddTaskDialog && (
+          <AddTaskDialog
+            leadId={lead.id}
+            isOpen={showAddTaskDialog}
+            onClose={() => setShowAddTaskDialog(false)}
+            onSuccess={handleTaskAdded}
+          />
+        )}
 
-      {showAddTaskDialog && (
-        <AddTaskDialog
-          leadId={lead.id}
-          isOpen={showAddTaskDialog}
-          onClose={() => setShowAddTaskDialog(false)}
-          onSuccess={handleTaskAdded}
-        />
-      )}
+        {showAddCommunicationDialog && (
+          <AddCommunicationDialog
+            leadId={lead.id}
+            isOpen={showAddCommunicationDialog}
+            onClose={() => setShowAddCommunicationDialog(false)}
+            onSuccess={handleCommunicationAdded}
+          />
+        )}
 
-      {showAddCommunicationDialog && (
-        <AddCommunicationDialog
-          leadId={lead.id}
-          isOpen={showAddCommunicationDialog}
-          onClose={() => setShowAddCommunicationDialog(false)}
-          onSuccess={handleCommunicationAdded}
-        />
-      )}
+        {communicationToEdit && (
+          <EditCommunicationDialog
+            communicationId={communicationToEdit}
+            isOpen={showEditCommunicationDialog}
+            onClose={() => {
+              setShowEditCommunicationDialog(false);
+              setCommunicationToEdit(null);
+            }}
+            onSuccess={() => {
+              fetchLeadDetails(id!);
+              setActiveTab("communications");
+            }}
+          />
+        )}
 
-      {communicationToEdit && (
-        <EditCommunicationDialog
-          communicationId={communicationToEdit}
-          isOpen={showEditCommunicationDialog}
-          onClose={() => {
-            setShowEditCommunicationDialog(false);
-            setCommunicationToEdit(null);
-          }}
-          onSuccess={() => {
-            fetchLeadDetails(id!);
-            setActiveTab("communications");
-          }}
-        />
-      )}
-
-      <AlertDialog
-        open={showDeleteCommunicationDialog}
-        onOpenChange={setShowDeleteCommunicationDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción eliminará permanentemente la comunicación. Esta acción
-              no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingCommunication}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                if (communicationToDelete) {
-                  handleDeleteCommunication(communicationToDelete);
-                }
-              }}
-              disabled={isDeletingCommunication}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeletingCommunication ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Eliminando...
-                </>
-              ) : (
-                "Eliminar"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl">{lead.full_name}</CardTitle>
-                <p className="text-muted-foreground">
-                  Añadido el {formatDate(lead.created_at)}
-                </p>
-              </div>
-              <Badge
-                className={getStatusColor(
-                  lead.lead_status_history[0]?.status || "new_contact",
-                )}
+        <AlertDialog
+          open={showDeleteCommunicationDialog}
+          onOpenChange={setShowDeleteCommunicationDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción eliminará permanentemente la comunicación. Esta acción
+                no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingCommunication}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (communicationToDelete) {
+                    handleDeleteCommunication(communicationToDelete);
+                  }
+                }}
+                disabled={isDeletingCommunication}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
               >
-                {getStatusLabel(
-                  lead.lead_status_history[0]?.status || "new_contact",
+                {isDeletingCommunication ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  "Eliminar"
                 )}
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{lead.email}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{lead.phone}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{lead.location}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>
-                      Nivel de Interés: {lead.lead_details?.interest_level || 0}
-                      /5
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>
-                      ¿Dispone de local?:{" "}
-                      {lead.lead_details?.investment_capacity === "yes"
-                        ? "Sí"
-                        : lead.lead_details?.investment_capacity === "no"
-                          ? "No"
-                          : "No especificado"}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <Activity className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>Puntuación: </span>
-                    <Badge
-                      className={`ml-2 ${getScoreColor(lead.lead_details?.score || 0)}`}
-                    >
-                      {lead.lead_details?.score || 0}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center mt-2">
-                    <span className="text-sm">
-                      Canal de Origen:{" "}
-                      {lead.lead_details?.source_channel || "No especificado"}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-              <Separator className="my-4" />
-
-              <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <h3 className="font-medium mb-2">Experiencia Previa</h3>
-                  <p className="text-muted-foreground">
-                    {lead.lead_details?.previous_experience !== null &&
-                    lead.lead_details?.previous_experience !== ""
-                      ? lead.lead_details.previous_experience
-                      : "No se proporcionó información"}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">Comentarios Adicionales</h3>
-                  <p className="text-muted-foreground">
-                    {lead.lead_details?.additional_comments !== null &&
-                    lead.lead_details?.additional_comments !== ""
-                      ? lead.lead_details.additional_comments
-                      : "No se proporcionaron comentarios"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="history">Historial de Estado</TabsTrigger>
-              <TabsTrigger value="communications">Comunicaciones</TabsTrigger>
-              <TabsTrigger value="tasks">Tareas</TabsTrigger>
-            </TabsList>
-            <TabsContent value="history" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historial de Estado</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {lead.lead_status_history.map((status) => (
-                      <div
-                        key={status.id}
-                        className="border-l-2 border-gray-200 pl-4 py-2"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <Badge className={getStatusColor(status.status)}>
-                              {getStatusLabel(status.status)}
-                            </Badge>
-                            <p className="mt-2">{status.notes}</p>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatDateTime(status.created_at)}
-                          </div>
-                        </div>
-                        {status.users && (
-                          <div className="flex items-center mt-2">
-                            <Avatar className="h-6 w-6 mr-2">
-                              <AvatarImage
-                                src={status.users.avatar_url || undefined}
-                              />
-                              <AvatarFallback>
-                                {status.users.full_name?.[0] || "U"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              {status.users.full_name || "System"}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="communications" className="mt-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Comunicaciones</CardTitle>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowAddCommunicationDialog(true)}
+                  <Badge
+                    className={getStatusColor(
+                      lead.lead_status_history[0]?.status || "new_contact",
+                    )}
                   >
-                    <Plus className="h-4 w-4 mr-1" /> Añadir
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {lead.communications.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-4">
-                      No hay comunicaciones registradas aún
+                    {getStatusLabel(
+                      lead.lead_status_history[0]?.status || "new_contact",
+                    )}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{lead.email}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{lead.phone}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{lead.location}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>
+                        Nivel de Interés: {lead.lead_details?.interest_level || 0}
+                        /5
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>
+                        ¿Dispone de local?:{" "}
+                        {lead.lead_details?.investment_capacity === "yes"
+                          ? "Sí"
+                          : lead.lead_details?.investment_capacity === "no"
+                            ? "No"
+                            : "No especificado"}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Activity className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>Puntuación: </span>
+                      <Badge
+                        className={`ml-2 ${getScoreColor(lead.lead_details?.score || 0)}`}
+                      >
+                        {lead.lead_details?.score || 0}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center mt-2">
+                      <span className="text-sm">
+                        Canal de Origen:{" "}
+                        {lead.lead_details?.source_channel || "No especificado"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Experiencia Previa</h3>
+                    <p className="text-muted-foreground">
+                      {lead.lead_details?.previous_experience !== null &&
+                      lead.lead_details?.previous_experience !== ""
+                        ? lead.lead_details.previous_experience
+                        : "No se proporcionó información"}
                     </p>
-                  ) : (
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">Comentarios Adicionales</h3>
+                    <p className="text-muted-foreground">
+                      {lead.lead_details?.additional_comments !== null &&
+                      lead.lead_details?.additional_comments !== ""
+                        ? lead.lead_details.additional_comments
+                        : "No se proporcionaron comentarios"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="history">Historial de Estado</TabsTrigger>
+                <TabsTrigger value="communications">Comunicaciones</TabsTrigger>
+                <TabsTrigger value="tasks">Tareas</TabsTrigger>
+              </TabsList>
+              <TabsContent value="history" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Historial de Estado</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-4">
-                      {lead.communications.map((comm) => (
+                      {lead.lead_status_history.map((status) => (
                         <div
-                          key={comm.id}
+                          key={status.id}
                           className="border-l-2 border-gray-200 pl-4 py-2"
                         >
                           <div className="flex justify-between items-start">
-                            <div className="flex-1 mr-2">
-                              <Badge variant="outline">
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                {getCommunicationTypeLabel(comm.type)}
+                            <div>
+                              <Badge className={getStatusColor(status.status)}>
+                                {getStatusLabel(status.status)}
                               </Badge>
-                              <p className="mt-2 whitespace-pre-line">
-                                {comm.content}
-                              </p>
+                              <p className="mt-2">{status.notes}</p>
                             </div>
-                            <div className="flex items-center">
-                              <div className="text-sm text-muted-foreground mr-2">
-                                {formatDateTime(comm.created_at)}
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                  >
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setCommunicationToEdit(comm.id);
-                                      setShowEditCommunicationDialog(true);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setCommunicationToDelete(comm.id);
-                                      setShowDeleteCommunicationDialog(true);
-                                    }}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Eliminar
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                            <div className="text-sm text-muted-foreground">
+                              {formatDateTime(status.created_at)}
                             </div>
                           </div>
-                          {comm.users && (
+                          {status.users && (
                             <div className="flex items-center mt-2">
                               <Avatar className="h-6 w-6 mr-2">
                                 <AvatarImage
-                                  src={comm.users.avatar_url || undefined}
+                                  src={status.users.avatar_url || undefined}
                                 />
                                 <AvatarFallback>
-                                  {comm.users.full_name?.[0] || "U"}
+                                  {status.users.full_name?.[0] || "U"}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm">
-                                {comm.users.full_name || "System"}
+                                {status.users.full_name || "System"}
                               </span>
                             </div>
                           )}
                         </div>
                       ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="tasks" className="mt-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Tareas</CardTitle>
-                  <Button size="sm" onClick={() => setShowAddTaskDialog(true)}>
-                    <Plus className="h-4 w-4 mr-1" /> Añadir
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <TasksList
-                    leadId={lead.id}
-                    onTasksChange={fetchLeadDetails.bind(null, lead.id)}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {userRole === "superadmin" || userRole === "admin" ? (
-                <>
-                  <Button
-                    className="w-full"
-                    onClick={() => setShowUpdateStatusDialog(true)}
-                  >
-                    Actualizar Estado
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowAddCommunicationDialog(true)}
-                  >
-                    Añadir Comunicación
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowAddTaskDialog(true)}
-                  >
-                    Programar Tarea
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowSendEmailDialog(true)}
-                  >
-                    Enviar Email
-                  </Button>
-                </>
-              ) : (
-                <div className="p-4 bg-gray-50 rounded-md text-center">
-                  <p className="text-muted-foreground">Modo de solo lectura</p>
-                  <p className="text-xs mt-1">
-                    No tienes permisos para realizar acciones
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Cronología</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[...lead.lead_status_history, ...lead.communications]
-                  .sort(
-                    (a, b) =>
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime(),
-                  )
-                  .slice(0, 5)
-                  .map((item) => (
-                    <div key={item.id} className="flex items-start space-x-3">
-                      <div className="bg-primary/10 p-2 rounded-full">
-                        {"status" in item ? (
-                          <Activity className="h-4 w-4 text-primary" />
-                        ) : (
-                          <MessageSquare className="h-4 w-4 text-primary" />
-                        )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="communications" className="mt-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Comunicaciones</CardTitle>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowAddCommunicationDialog(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Añadir
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {lead.communications.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-4">
+                        No hay comunicaciones registradas aún
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {lead.communications.map((comm) => (
+                          <div
+                            key={comm.id}
+                            className="border-l-2 border-gray-200 pl-4 py-2"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 mr-2">
+                                <Badge variant="outline">
+                                  <MessageSquare className="h-3 w-3 mr-1" />
+                                  {getCommunicationTypeLabel(comm.type)}
+                                </Badge>
+                                <p className="mt-2 whitespace-pre-line">
+                                  {comm.content}
+                                </p>
+                              </div>
+                              <div className="flex items-center">
+                                <div className="text-sm text-muted-foreground mr-2">
+                                  {formatDateTime(comm.created_at)}
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                    >
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setCommunicationToEdit(comm.id);
+                                        setShowEditCommunicationDialog(true);
+                                      }}
+                                    >
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Editar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setCommunicationToDelete(comm.id);
+                                        setShowDeleteCommunicationDialog(true);
+                                      }}
+                                      className="text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Eliminar
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            {comm.users && (
+                              <div className="flex items-center mt-2">
+                                <Avatar className="h-6 w-6 mr-2">
+                                  <AvatarImage
+                                    src={comm.users.avatar_url || undefined}
+                                  />
+                                  <AvatarFallback>
+                                    {comm.users.full_name?.[0] || "U"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm">
+                                  {comm.users.full_name || "System"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="tasks" className="mt-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Tareas</CardTitle>
+                    <Button size="sm" onClick={() => setShowAddTaskDialog(true)}>
+                      <Plus className="h-4 w-4 mr-1" /> Añadir
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <TasksList
+                      leadId={lead.id}
+                      onTasksChange={fetchLeadDetails.bind(null, lead.id)}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Acciones</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {userRole === "superadmin" || userRole === "admin" ? (
+                  <>
+                    <Button
+                      className="w-full"
+                      onClick={() => setShowUpdateStatusDialog(true)}
+                    >
+                      Actualizar Estado
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowAddCommunicationDialog(true)}
+                    >
+                      Añadir Comunicación
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowAddTaskDialog(true)}
+                    >
+                      Programar Tarea
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        window.open(`mailto:${lead.email}`, "_blank")
+                      }
+                    >
+                      <Mail className="mr-2 h-4 w-4" /> Enviar Email
+                    </Button>
+                  </>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-md text-center">
+                    <p className="text-muted-foreground">Modo de solo lectura</p>
+                    <p className="text-xs mt-1">
+                      No tienes permisos para realizar acciones
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Cronología</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[...lead.lead_status_history, ...lead.communications]
+                    .sort(
+                      (a, b) =>
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime(),
+                    )
+                    .slice(0, 5)
+                    .map((item) => (
+                      <div key={item.id} className="flex items-start space-x-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
                           {"status" in item ? (
-                            <>Estado cambiado a {getStatusLabel(item.status)}</>
+                            <Activity className="h-4 w-4 text-primary" />
                           ) : (
-                            <>
-                              Comunicación de{" "}
-                              {getCommunicationTypeLabel(item.type)}
-                            </>
+                            <MessageSquare className="h-4 w-4 text-primary" />
                           )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDateTime(item.created_at)}
-                        </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {"status" in item ? (
+                              <>Estado cambiado a {getStatusLabel(item.status)}</>
+                            ) : (
+                              <>
+                                Comunicación de{" "}
+                                {getCommunicationTypeLabel(item.type)}
+                              </>
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDateTime(item.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

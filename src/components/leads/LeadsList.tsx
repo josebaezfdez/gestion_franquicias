@@ -17,9 +17,10 @@ import {
   ArrowUpDown,
   X,
   Calendar,
+  Loader2,
+  Building,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import MassEmailDialog from "../email/MassEmailDialog";
 import ImportLeadsDialog from "./ImportLeadsDialog";
 import {
   Select,
@@ -65,7 +66,6 @@ export default function LeadsList() {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showMassEmailDialog, setShowMassEmailDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -270,365 +270,370 @@ export default function LeadsList() {
   }
 
   return (
-    <div className="container mx-auto p-6" style={{ maxWidth: "1200px" }}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Gestión de Candidatos</h2>
-        {(userRole === "superadmin" || userRole === "admin") && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowImportDialog(true)}>
-              <Upload className="mr-2 h-4 w-4" /> Importar CSV
-            </Button>
-            <Button onClick={() => navigate("/leads/new")}>
-              <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Candidato
-            </Button>
+    <div className="h-full bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+          <Building className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+        </div>
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Leads</h1>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                {filteredLeads.length} leads en total
+              </p>
+            </div>
+            {(userRole === "superadmin" || userRole === "admin") && (
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <Button variant="outline" onClick={() => setShowImportDialog(true)} className="flex-1 sm:flex-none">
+                  <Upload className="mr-2 h-4 w-4" /> Importar CSV
+                </Button>
+                <Button onClick={() => navigate("/leads/new")} className="bg-red-600 hover:bg-red-700 flex-1 sm:flex-none">
+                  <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Lead
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar leads..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Popover open={showFilters} onOpenChange={setShowFilters}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={showFilters ? "bg-slate-100" : ""}
+              >
+                <Filter className="mr-2 h-4 w-4" /> Filtrar
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4" align="end">
+              <div className="space-y-4">
+                <h4 className="font-medium">Filtros</h4>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Estado</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos los estados" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem value="new_contact">Nuevo Contacto</SelectItem>
+                      <SelectItem value="first_contact">
+                        Primer Contacto
+                      </SelectItem>
+                      <SelectItem value="info_sent">
+                        Información Enviada
+                      </SelectItem>
+                      <SelectItem value="interview_scheduled">
+                        Entrevista Programada
+                      </SelectItem>
+                      <SelectItem value="interview_completed">
+                        Entrevista Completada
+                      </SelectItem>
+                      <SelectItem value="proposal_sent">
+                        Propuesta Enviada
+                      </SelectItem>
+                      <SelectItem value="negotiation">Negociación</SelectItem>
+                      <SelectItem value="contract_signed">
+                        Contrato Firmado
+                      </SelectItem>
+                      <SelectItem value="rejected">Rechazado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Fuente</label>
+                  <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas las fuentes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las fuentes</SelectItem>
+                      <SelectItem value="website">Sitio Web</SelectItem>
+                      <SelectItem value="referral">Referencia</SelectItem>
+                      <SelectItem value="social_media">Redes Sociales</SelectItem>
+                      <SelectItem value="event">Evento</SelectItem>
+                      <SelectItem value="advertisement">Publicidad</SelectItem>
+                      <SelectItem value="other">Otro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Fecha de creación</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {dateFilter ? (
+                          format(dateFilter, "PPP", { locale: es })
+                        ) : (
+                          <span>Seleccionar fecha</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateFilter}
+                        onSelect={setDateFilter}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="flex justify-between pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setStatusFilter("");
+                      setSourceFilter("");
+                      setDateFilter(undefined);
+                    }}
+                  >
+                    <X className="mr-2 h-4 w-4" /> Limpiar
+                  </Button>
+                  <Button size="sm" onClick={() => setShowFilters(false)}>
+                    Aplicar filtros
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <ArrowUpDown className="mr-2 h-4 w-4" /> Ordenar
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56" align="end">
+              <div className="space-y-2">
+                <h4 className="font-medium mb-2">Ordenar por</h4>
+
+                <div className="grid gap-1">
+                  <Button
+                    variant="ghost"
+                    className="justify-start font-normal"
+                    onClick={() =>
+                      setSortOption({
+                        field: "full_name",
+                        direction:
+                          sortOption.field === "full_name" &&
+                          sortOption.direction === "asc"
+                            ? "desc"
+                            : "asc",
+                      })
+                    }
+                  >
+                    Nombre
+                    {sortOption.field === "full_name" && (
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="justify-start font-normal"
+                    onClick={() =>
+                      setSortOption({
+                        field: "email",
+                        direction:
+                          sortOption.field === "email" &&
+                          sortOption.direction === "asc"
+                            ? "desc"
+                            : "asc",
+                      })
+                    }
+                  >
+                    Email
+                    {sortOption.field === "email" && (
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="justify-start font-normal"
+                    onClick={() =>
+                      setSortOption({
+                        field: "location",
+                        direction:
+                          sortOption.field === "location" &&
+                          sortOption.direction === "asc"
+                            ? "desc"
+                            : "asc",
+                      })
+                    }
+                  >
+                    Ubicación
+                    {sortOption.field === "location" && (
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="justify-start font-normal"
+                    onClick={() =>
+                      setSortOption({
+                        field: "score",
+                        direction:
+                          sortOption.field === "score" &&
+                          sortOption.direction === "asc"
+                            ? "desc"
+                            : "asc",
+                      })
+                    }
+                  >
+                    Puntuación
+                    {sortOption.field === "score" && (
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="justify-start font-normal"
+                    onClick={() =>
+                      setSortOption({
+                        field: "created_at",
+                        direction:
+                          sortOption.field === "created_at" &&
+                          sortOption.direction === "asc"
+                            ? "desc"
+                            : "asc",
+                      })
+                    }
+                  >
+                    Fecha de creación
+                    {sortOption.field === "created_at" && (
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {showImportDialog && (
+          <ImportLeadsDialog
+            isOpen={showImportDialog}
+            onClose={() => setShowImportDialog(false)}
+            onSuccess={fetchLeads}
+          />
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+            <span className="ml-2">Cargando leads...</span>
+          </div>
+        ) : filteredLeads.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">No se encontraron leads</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredLeads.map((lead) => (
+              <Card
+                key={lead.id}
+                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate(`/leads/${lead.id}`)}
+              >
+                <CardContent className="p-0">
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-lg truncate">
+                        {lead.full_name}
+                      </h3>
+                      <Badge
+                        className={getStatusColor(
+                          lead.lead_status_history[0]?.status || "new_contact",
+                        )}
+                      >
+                        {getStatusLabel(
+                          lead.lead_status_history[0]?.status || "new_contact",
+                        )}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 mr-2" />
+                        <span className="truncate">{lead.email}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Phone className="h-4 w-4 mr-2" />
+                        <span>{lead.phone}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        <span>{lead.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-2" />
+                        <span>Añadido el {formatDate(lead.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t p-4 bg-gray-50 flex justify-between items-center">
+                    <div>
+                      <span className="text-xs text-gray-500">Fuente:</span>
+                      <Badge variant="outline" className="ml-2">
+                        {getSourceChannelLabel(
+                          Array.isArray(lead.lead_details) &&
+                            lead.lead_details.length > 0
+                            ? lead.lead_details[0].source_channel
+                            : lead.lead_details?.source_channel || "unknown",
+                        )}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Puntuación:</span>
+                      <Badge
+                        className={`ml-2 ${getScoreColor(
+                          Array.isArray(lead.lead_details) &&
+                            lead.lead_details.length > 0
+                            ? lead.lead_details[0].score || 0
+                            : lead.lead_details?.score || 0,
+                        )}`}
+                      >
+                        {Array.isArray(lead.lead_details) &&
+                        lead.lead_details.length > 0
+                          ? lead.lead_details[0].score || 0
+                          : lead.lead_details?.score || 0}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>
-
-      <div className="flex items-center space-x-2 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar candidatos..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Popover open={showFilters} onOpenChange={setShowFilters}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={showFilters ? "bg-slate-100" : ""}
-            >
-              <Filter className="mr-2 h-4 w-4" /> Filtrar
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-4" align="end">
-            <div className="space-y-4">
-              <h4 className="font-medium">Filtros</h4>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Estado</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos los estados" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los estados</SelectItem>
-                    <SelectItem value="new_contact">Nuevo Contacto</SelectItem>
-                    <SelectItem value="first_contact">
-                      Primer Contacto
-                    </SelectItem>
-                    <SelectItem value="info_sent">
-                      Información Enviada
-                    </SelectItem>
-                    <SelectItem value="interview_scheduled">
-                      Entrevista Programada
-                    </SelectItem>
-                    <SelectItem value="interview_completed">
-                      Entrevista Completada
-                    </SelectItem>
-                    <SelectItem value="proposal_sent">
-                      Propuesta Enviada
-                    </SelectItem>
-                    <SelectItem value="negotiation">Negociación</SelectItem>
-                    <SelectItem value="contract_signed">
-                      Contrato Firmado
-                    </SelectItem>
-                    <SelectItem value="rejected">Rechazado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Fuente</label>
-                <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas las fuentes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las fuentes</SelectItem>
-                    <SelectItem value="website">Sitio Web</SelectItem>
-                    <SelectItem value="referral">Referencia</SelectItem>
-                    <SelectItem value="social_media">Redes Sociales</SelectItem>
-                    <SelectItem value="event">Evento</SelectItem>
-                    <SelectItem value="advertisement">Publicidad</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Fecha de creación</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {dateFilter ? (
-                        format(dateFilter, "PPP", { locale: es })
-                      ) : (
-                        <span>Seleccionar fecha</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={dateFilter}
-                      onSelect={setDateFilter}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex justify-between pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setStatusFilter("");
-                    setSourceFilter("");
-                    setDateFilter(undefined);
-                  }}
-                >
-                  <X className="mr-2 h-4 w-4" /> Limpiar
-                </Button>
-                <Button size="sm" onClick={() => setShowFilters(false)}>
-                  Aplicar filtros
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline">
-              <ArrowUpDown className="mr-2 h-4 w-4" /> Ordenar
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56" align="end">
-            <div className="space-y-2">
-              <h4 className="font-medium mb-2">Ordenar por</h4>
-
-              <div className="grid gap-1">
-                <Button
-                  variant="ghost"
-                  className="justify-start font-normal"
-                  onClick={() =>
-                    setSortOption({
-                      field: "full_name",
-                      direction:
-                        sortOption.field === "full_name" &&
-                        sortOption.direction === "asc"
-                          ? "desc"
-                          : "asc",
-                    })
-                  }
-                >
-                  Nombre
-                  {sortOption.field === "full_name" && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="justify-start font-normal"
-                  onClick={() =>
-                    setSortOption({
-                      field: "email",
-                      direction:
-                        sortOption.field === "email" &&
-                        sortOption.direction === "asc"
-                          ? "desc"
-                          : "asc",
-                    })
-                  }
-                >
-                  Email
-                  {sortOption.field === "email" && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="justify-start font-normal"
-                  onClick={() =>
-                    setSortOption({
-                      field: "location",
-                      direction:
-                        sortOption.field === "location" &&
-                        sortOption.direction === "asc"
-                          ? "desc"
-                          : "asc",
-                    })
-                  }
-                >
-                  Ubicación
-                  {sortOption.field === "location" && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="justify-start font-normal"
-                  onClick={() =>
-                    setSortOption({
-                      field: "score",
-                      direction:
-                        sortOption.field === "score" &&
-                        sortOption.direction === "asc"
-                          ? "desc"
-                          : "asc",
-                    })
-                  }
-                >
-                  Puntuación
-                  {sortOption.field === "score" && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="justify-start font-normal"
-                  onClick={() =>
-                    setSortOption({
-                      field: "created_at",
-                      direction:
-                        sortOption.field === "created_at" &&
-                        sortOption.direction === "asc"
-                          ? "desc"
-                          : "asc",
-                    })
-                  }
-                >
-                  Fecha de creación
-                  {sortOption.field === "created_at" && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {(userRole === "superadmin" || userRole === "admin") && (
-          <Button onClick={() => setShowMassEmailDialog(true)}>
-            <Send className="mr-2 h-4 w-4" /> Email Masivo
-          </Button>
-        )}
-      </div>
-
-      {showMassEmailDialog && (
-        <MassEmailDialog
-          isOpen={showMassEmailDialog}
-          onClose={() => setShowMassEmailDialog(false)}
-        />
-      )}
-
-      {showImportDialog && (
-        <ImportLeadsDialog
-          isOpen={showImportDialog}
-          onClose={() => setShowImportDialog(false)}
-          onSuccess={fetchLeads}
-        />
-      )}
-
-      {loading ? (
-        <div className="text-center py-10">Cargando candidatos...</div>
-      ) : filteredLeads.length === 0 ? (
-        <div className="text-center py-10">
-          <p className="text-muted-foreground">No se encontraron candidatos</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLeads.map((lead) => (
-            <Card
-              key={lead.id}
-              className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/leads/${lead.id}`)}
-            >
-              <CardContent className="p-0">
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-lg truncate">
-                      {lead.full_name}
-                    </h3>
-                    <Badge
-                      className={getStatusColor(
-                        lead.lead_status_history[0]?.status || "new_contact",
-                      )}
-                    >
-                      {getStatusLabel(
-                        lead.lead_status_history[0]?.status || "new_contact",
-                      )}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Mail className="h-4 w-4 mr-2" />
-                      <span className="truncate">{lead.email}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Phone className="h-4 w-4 mr-2" />
-                      <span>{lead.phone}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      <span>{lead.location}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span>Añadido el {formatDate(lead.created_at)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t p-4 bg-gray-50 flex justify-between items-center">
-                  <div>
-                    <span className="text-xs text-gray-500">Fuente:</span>
-                    <Badge variant="outline" className="ml-2">
-                      {getSourceChannelLabel(
-                        Array.isArray(lead.lead_details) &&
-                          lead.lead_details.length > 0
-                          ? lead.lead_details[0].source_channel
-                          : lead.lead_details?.source_channel || "unknown",
-                      )}
-                    </Badge>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500">Puntuación:</span>
-                    <Badge
-                      className={`ml-2 ${getScoreColor(
-                        Array.isArray(lead.lead_details) &&
-                          lead.lead_details.length > 0
-                          ? lead.lead_details[0].score || 0
-                          : lead.lead_details?.score || 0,
-                      )}`}
-                    >
-                      {Array.isArray(lead.lead_details) &&
-                      lead.lead_details.length > 0
-                        ? lead.lead_details[0].score || 0
-                        : lead.lead_details?.score || 0}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

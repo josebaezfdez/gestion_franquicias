@@ -1,32 +1,51 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+  signOut: async () => {},
+});
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for changes on auth state (signed in, signed out, etc.)
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -34,107 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-      if (error) throw error;
-
-      // Verificar si el usuario se creó correctamente
-      if (data.user) {
-        console.log("Usuario creado exitosamente:", data.user.id);
-
-        // Asegurarse de que el usuario también se crea en la tabla public.users
-        // Por defecto, los nuevos usuarios tienen el rol "user"
-        const { error: userError } = await supabase.from("users").upsert({
-          id: data.user.id,
-          full_name: fullName,
-          email: email,
-          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-          role: "user",
-          created_at: new Date().toISOString(),
-        });
-
-        if (userError) {
-          console.error("Error al crear el perfil de usuario:", userError);
-          throw userError;
-        }
-      }
-    } catch (error) {
-      console.error("Error en el registro:", error);
-      throw error;
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      console.log("Respuesta de autenticación:", { data, error });
-
-      if (error) throw error;
-
-      // Verificar si el usuario existe en la tabla public.users
-      if (data.user) {
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
-
-        if (userError || !userData) {
-          console.log(
-            "Usuario no encontrado en la tabla public.users, creándolo ahora",
-          );
-
-          // Si no existe, crearlo con rol de usuario por defecto
-          const { error: insertError } = await supabase.from("users").insert({
-            id: data.user.id,
-            email: email,
-            full_name:
-              data.user.user_metadata?.full_name || email.split("@")[0],
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-            role: "user",
-            created_at: new Date().toISOString(),
-          });
-
-          if (insertError) {
-            console.error("Error al crear el perfil de usuario:", insertError);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error en signIn:", error);
-      throw error;
-    }
-  };
-
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await supabase.auth.signOut();
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  const value = {
+    user,
+    session,
+    loading,
+    signOut,
+  };
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

@@ -1,11 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EmailSettingsForm from "./EmailSettingsForm";
+
 import AccountSettings from "./AccountSettings";
-import CreateDefaultUsers from "./CreateDefaultUsers";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
-import { useAuth } from "../../../supabase/auth";
+import { useAuth } from "@/supabase/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../supabase/supabase";
 
@@ -35,39 +34,28 @@ export default function SettingsPage() {
   }, [user]);
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Configuración</h1>
-        {userRole === "superadmin" && (
-          <Button onClick={() => navigate("/settings/users")}>
-            <Users className="mr-2 h-4 w-4" /> Gestionar Usuarios
-          </Button>
-        )}
+    <div className="h-full bg-gray-50">
+      <div className="bg-white border-b border-gray-200 px-8 py-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Gestiona tu cuenta y preferencias
+            </p>
+          </div>
+          {(userRole === "superadmin" || userRole === "admin") && (
+            <Button onClick={() => navigate("/settings/users")}>
+              <Users className="mr-2 h-4 w-4" /> Gestionar Usuarios
+            </Button>
+          )}
+        </div>
       </div>
 
-      <Tabs defaultValue="account" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="account">Cuenta</TabsTrigger>
-          <TabsTrigger value="email">Email</TabsTrigger>
-          {userRole === "superadmin" && (
-            <TabsTrigger value="system">Sistema</TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="account" className="space-y-4">
+      <div className="p-8">
+        <div className="bg-white rounded-lg shadow-sm">
           <AccountSettings />
-        </TabsContent>
-
-        <TabsContent value="email" className="space-y-4">
-          <EmailSettingsForm />
-        </TabsContent>
-
-        {userRole === "superadmin" && (
-          <TabsContent value="system" className="space-y-4">
-            <CreateDefaultUsers />
-          </TabsContent>
-        )}
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }

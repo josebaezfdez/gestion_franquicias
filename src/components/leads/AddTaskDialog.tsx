@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "../../../supabase/supabase";
+import { useAuth } from "@/supabase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,7 +40,6 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "@/components/ui/use-toast";
-import { useAuth } from "../../../supabase/auth";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "El título es obligatorio" }),

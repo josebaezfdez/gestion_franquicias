@@ -318,10 +318,22 @@ export default function FranchiseDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" variant="outline">
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() =>
+                  window.open(`mailto:${franchise.email}`, "_blank")
+                }
+              >
                 <Mail className="mr-2 h-4 w-4" /> Enviar Email
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() =>
+                  (window.location.href = `tel:${franchise.phone}`)
+                }
+              >
                 <Phone className="mr-2 h-4 w-4" /> Llamar
               </Button>
             </CardContent>

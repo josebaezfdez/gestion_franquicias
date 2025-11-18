@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, TrendingUp, MapPin, BarChart, Activity } from "lucide-react";
+import { Users, TrendingUp, MapPin, BarChart, Activity, Clock } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 
 type DashboardStats = {
   totalLeads: number;
@@ -26,6 +28,7 @@ type DashboardStats = {
 export default function LeadDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -34,6 +37,7 @@ export default function LeadDashboard() {
   async function fetchDashboardStats() {
     try {
       setLoading(true);
+      setError(null);
 
       // Get all leads with their details and latest status
       const { data: leadsData, error: leadsError } = await supabase.from(
@@ -44,7 +48,39 @@ export default function LeadDashboard() {
           lead_status_history(status, created_at)
         `);
 
-      if (leadsError) throw leadsError;
+      if (leadsError) {
+        console.error("Error fetching dashboard stats:", leadsError);
+        setError("No se pudieron cargar los datos del dashboard");
+        // Set empty stats instead of failing
+        setStats({
+          totalLeads: 0,
+          newLeadsThisMonth: 0,
+          conversionRate: 0,
+          averageScore: 0,
+          leadsByStatus: {},
+          leadsBySource: {},
+          leadsByLocation: {},
+          recentLeads: [],
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Handle empty data
+      if (!leadsData || leadsData.length === 0) {
+        setStats({
+          totalLeads: 0,
+          newLeadsThisMonth: 0,
+          conversionRate: 0,
+          averageScore: 0,
+          leadsByStatus: {},
+          leadsBySource: {},
+          leadsByLocation: {},
+          recentLeads: [],
+        });
+        setLoading(false);
+        return;
+      }
 
       // Process the data
       const processedLeads = leadsData.map((lead) => {
@@ -172,6 +208,18 @@ export default function LeadDashboard() {
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
+      setError("Error de conexión. Por favor, verifica tu conexión a internet.");
+      // Set empty stats on error
+      setStats({
+        totalLeads: 0,
+        newLeadsThisMonth: 0,
+        conversionRate: 0,
+        averageScore: 0,
+        leadsByStatus: {},
+        leadsBySource: {},
+        leadsByLocation: {},
+        recentLeads: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -260,196 +308,265 @@ export default function LeadDashboard() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 text-center">Cargando panel...</div>
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+        <span className="ml-2 dark:text-white">Cargando panel...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
+        <div className="bg-white dark:bg-[#1e2836] border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+          <div className="bg-red-100 dark:bg-red-900/30 p-2 sm:p-3 rounded-lg">
+            <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard - Resumen Ejecutivo</h1>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Visualización de KPIs principales y rankings por dimensión
+            </p>
+          </div>
+        </div>
+        <div className="p-8 text-center">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <p className="text-red-800 dark:text-red-300 font-medium">{error}</p>
+            <button 
+              onClick={fetchDashboardStats}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="container mx-auto p-6 text-center">
+      <div className="container mx-auto p-6 text-center dark:text-white">
         Error al cargar los datos del panel
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6" style={{ maxWidth: "1200px" }}>
-      <h2 className="text-3xl font-bold mb-6">
-        Panel de Gestión de Candidatos
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total de Candidatos
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalLeads}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.newLeadsThisMonth} nuevos este mes
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Tasa de Conversión
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.conversionRate.toFixed(1)}%
-            </div>
-            <Progress value={stats.conversionRate} className="h-2 mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Puntuación Media
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.averageScore.toFixed(1)}
-            </div>
-            <Progress
-              value={(stats.averageScore / 100) * 100}
-              className="h-2 mt-2"
-              indicatorClassName={
-                stats.averageScore >= 80
-                  ? "bg-green-500"
-                  : stats.averageScore >= 50
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
-              }
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Ubicaciones Principales
-            </CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">
-              {Object.entries(stats.leadsByLocation)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 3)
-                .map(([location, count], index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center mb-1"
-                  >
-                    <span className="truncate">{location}</span>
-                    <span className="font-medium">{count}</span>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
+      {/* Header */}
+      <div className="bg-white dark:bg-[#1e2836] border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 dark:bg-red-900/30 p-2 sm:p-3 rounded-lg">
+          <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+        </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard - Resumen Ejecutivo</h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Visualización de KPIs principales y rankings por dimensión
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card className="lg:col-span-2">
+      <div className="p-4 sm:p-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow dark:bg-[#1e2836] dark:border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                Total de Proyectos
+              </CardTitle>
+              <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <Users className="h-5 w-5 text-red-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalLeads}</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {stats.newLeadsThisMonth} nuevos este mes
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Tasa de Conversión
+              </CardTitle>
+              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">
+                {stats.conversionRate.toFixed(1)}%
+              </div>
+              <Progress value={stats.conversionRate} className="h-2 mt-3 bg-gray-200" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Puntuación Media
+              </CardTitle>
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">
+                {stats.averageScore.toFixed(1)}
+              </div>
+              <Progress
+                value={(stats.averageScore / 100) * 100}
+                className="h-2 mt-3 bg-gray-200"
+                indicatorClassName={
+                  stats.averageScore >= 80
+                    ? "bg-green-500"
+                    : stats.averageScore >= 50
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                }
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Ubicaciones
+              </CardTitle>
+              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-purple-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm space-y-2 mt-2">
+                {Object.entries(stats.leadsByLocation)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 3)
+                  .map(([location, count], index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
+                      <span className="truncate text-gray-700">{location}</span>
+                      <span className="font-semibold text-gray-900">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Pipeline and Sources */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2 border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-900">
+                Resumen del Pipeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(stats.leadsByStatus).map(([status, count]) => (
+                  <div key={status} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Badge className={`${getStatusColor(status)} rounded-full`}>
+                          {getStatusLabel(status)}
+                        </Badge>
+                        <span className="ml-3 text-sm text-gray-700">{count} proyectos</span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">
+                        {((count / stats.totalLeads) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={(count / stats.totalLeads) * 100}
+                      className="h-2 bg-gray-200"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-900">
+                Fuentes de Proyectos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(stats.leadsBySource)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([source, count]) => (
+                    <div key={source} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">
+                          {getSourceChannelLabel(source || "unknown")}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {count} ({((count / stats.totalLeads) * 100).toFixed(1)}%)
+                        </span>
+                      </div>
+                      <Progress
+                        value={(count / stats.totalLeads) * 100}
+                        className="h-2 bg-gray-200"
+                      />
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Leads */}
+        <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle>Resumen del Pipeline</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              Proyectos Recientes
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(stats.leadsByStatus).map(([status, count]) => (
-                <div key={status} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Badge className={getStatusColor(status)}>
-                        {getStatusLabel(status)}
-                      </Badge>
-                      <span className="ml-2">{count} candidatos</span>
+              {stats.recentLeads.map((lead) => (
+                <div
+                  key={lead.id}
+                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                >
+                  <div className="flex items-center">
+                    <Avatar className="h-10 w-10 mr-3">
+                      <AvatarImage
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${lead.full_name}`}
+                      />
+                      <AvatarFallback className="bg-red-100 text-red-600">
+                        {lead.full_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-gray-900">{lead.full_name}</p>
+                      <p className="text-sm text-gray-500">
+                        {formatDate(lead.created_at)}
+                      </p>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {((count / stats.totalLeads) * 100).toFixed(1)}%
-                    </span>
                   </div>
-                  <Progress
-                    value={(count / stats.totalLeads) * 100}
-                    className="h-2"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <Badge className={`${getStatusColor(lead.status)} rounded-full`}>
+                      {getStatusLabel(lead.status)}
+                    </Badge>
+                    <Badge className={`${getScoreColor(lead.score)} rounded-full`}>
+                      {lead.score}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Fuentes de Candidatos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(stats.leadsBySource)
-                .sort((a, b) => b[1] - a[1])
-                .map(([source, count]) => (
-                  <div key={source} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="capitalize">
-                        {getSourceChannelLabel(source || "unknown")}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {count} candidatos (
-                        {((count / stats.totalLeads) * 100).toFixed(1)}%)
-                      </span>
-                    </div>
-                    <Progress
-                      value={(count / stats.totalLeads) * 100}
-                      className="h-2"
-                    />
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Candidatos Recientes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {stats.recentLeads.map((lead) => (
-              <div
-                key={lead.id}
-                className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
-              >
-                <div>
-                  <p className="font-medium">{lead.full_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Añadido el {formatDate(lead.created_at)}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge className={getStatusColor(lead.status)}>
-                    {getStatusLabel(lead.status)}
-                  </Badge>
-                  <Badge className={getScoreColor(lead.score)}>
-                    {lead.score}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

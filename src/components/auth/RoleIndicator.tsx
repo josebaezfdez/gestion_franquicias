@@ -23,9 +23,14 @@ export default function RoleIndicator({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function checkUserRole() {
-      if (!user) {
-        setLoading(false);
+      if (!user?.id) {
+        if (isMounted) {
+          setLoading(false);
+          setUserRole(null);
+        }
         return;
       }
 
@@ -34,20 +39,32 @@ export default function RoleIndicator({
 
         if (error) {
           console.error("Error checking user role:", error);
-          setUserRole(null);
+          if (isMounted) {
+            setUserRole(null);
+          }
         } else {
-          setUserRole(data);
+          if (isMounted) {
+            setUserRole(data);
+          }
         }
       } catch (error) {
         console.error("Error in checkUserRole:", error);
-        setUserRole(null);
+        if (isMounted) {
+          setUserRole(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     checkUserRole();
-  }, [user]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   if (loading || !userRole) {
     return null;
@@ -82,7 +99,7 @@ export default function RoleIndicator({
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <div>
             <Badge
               variant={getRoleBadgeVariant(userRole)}

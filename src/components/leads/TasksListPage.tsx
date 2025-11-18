@@ -20,6 +20,7 @@ import {
   Filter,
   Calendar,
   User,
+  CheckSquare,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -175,222 +176,235 @@ export default function TasksListPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
         <span className="ml-2">Cargando tareas...</span>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6" style={{ maxWidth: "1200px" }}>
-      <h2 className="text-2xl font-bold mb-6">Lista de Tareas</h2>
-
-      <div className="flex items-center space-x-2 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar tareas o leads..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <div className="h-full bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+          <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
         </div>
-        <Button variant="outline">
-          <Filter className="mr-2 h-4 w-4" /> Filtrar
-        </Button>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mis Tareas</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            {pendingTasks.length} tareas pendientes
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-xl font-semibold mb-4">
-            Tareas Pendientes ({pendingTasks.length})
-          </h3>
-          {pendingTasks.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              No hay tareas pendientes
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pendingTasks.map((task) => (
-                <Card
-                  key={task.id}
-                  className="hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start space-x-2">
-                        <div className="pt-0.5">
-                          <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={(checked) => {
-                              if (typeof checked === "boolean") {
-                                handleTaskCompletion(task.id, checked);
-                              }
-                            }}
-                            disabled={completingTask === task.id}
-                          />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{task.title}</h4>
-                          <Badge
-                            variant="outline"
-                            className="mt-1 flex items-center space-x-1 w-fit"
-                          >
-                            {getTaskIcon(task.type)}
-                            <span>{getTaskTypeLabel(task.type)}</span>
-                          </Badge>
-                        </div>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleTaskCompletion(task.id, true)}
-                            disabled={completingTask === task.id}
-                          >
-                            Marcar como completada
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => navigate(`/leads/${task.lead_id}`)}
-                          >
-                            Ver detalles del lead
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {task.description}
-                      </p>
-                    )}
-
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>Vence: {formatDate(task.due_date)}</span>
-                      </div>
-                      <div
-                        className="flex items-center cursor-pointer hover:text-primary"
-                        onClick={() => navigate(`/leads/${task.lead_id}`)}
-                      >
-                        <User className="h-3 w-3 mr-1" />
-                        <span>{task.lead.full_name}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+      <div className="p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar tareas o proyectos..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button variant="outline">
+            <Filter className="mr-2 h-4 w-4" /> Filtrar
+          </Button>
         </div>
 
-        <div>
-          <h3 className="text-xl font-semibold mb-4">
-            Tareas Completadas ({completedTasks.length})
-          </h3>
-          {completedTasks.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              No hay tareas completadas
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedTasks.map((task) => (
-                <Card
-                  key={task.id}
-                  className="bg-gray-50 hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start space-x-2">
-                        <div className="pt-0.5">
-                          <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={(checked) => {
-                              if (typeof checked === "boolean") {
-                                handleTaskCompletion(task.id, checked);
-                              }
-                            }}
-                            disabled={completingTask === task.id}
-                          />
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold mb-4">
+              Tareas Pendientes ({pendingTasks.length})
+            </h3>
+            {pendingTasks.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No hay tareas pendientes
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pendingTasks.map((task) => (
+                  <Card
+                    key={task.id}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start space-x-2">
+                          <div className="pt-0.5">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={(checked) => {
+                                if (typeof checked === "boolean") {
+                                  handleTaskCompletion(task.id, checked);
+                                }
+                              }}
+                              disabled={completingTask === task.id}
+                            />
+                          </div>
+                          <div>
+                            <h4 className="font-medium">{task.title}</h4>
+                            <Badge
+                              variant="outline"
+                              className="mt-1 flex items-center space-x-1 w-fit"
+                            >
+                              {getTaskIcon(task.type)}
+                              <span>{getTaskTypeLabel(task.type)}</span>
+                            </Badge>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium line-through text-muted-foreground">
-                            {task.title}
-                          </h4>
-                          <Badge
-                            variant="outline"
-                            className="mt-1 flex items-center space-x-1 w-fit opacity-70"
-                          >
-                            {getTaskIcon(task.type)}
-                            <span>{getTaskTypeLabel(task.type)}</span>
-                          </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleTaskCompletion(task.id, true)}
+                              disabled={completingTask === task.id}
+                            >
+                              Marcar como completada
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/leads/${task.lead_id}`)}
+                            >
+                              Ver detalles del lead
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      {task.description && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {task.description}
+                        </p>
+                      )}
+
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span>Vence: {formatDate(task.due_date)}</span>
+                        </div>
+                        <div
+                          className="flex items-center cursor-pointer hover:text-primary"
+                          onClick={() => navigate(`/leads/${task.lead_id}`)}
+                        >
+                          <User className="h-3 w-3 mr-1" />
+                          <span>{task.lead.full_name}</span>
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleTaskCompletion(task.id, false)}
-                            disabled={completingTask === task.id}
-                          >
-                            Marcar como pendiente
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => navigate(`/leads/${task.lead_id}`)}
-                          >
-                            Ver detalles del lead
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
 
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground line-through mb-3">
-                        {task.description}
-                      </p>
-                    )}
+          <div>
+            <h3 className="text-xl font-semibold mb-4">
+              Tareas Completadas ({completedTasks.length})
+            </h3>
+            {completedTasks.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No hay tareas completadas
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {completedTasks.map((task) => (
+                  <Card
+                    key={task.id}
+                    className="bg-gray-50 hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start space-x-2">
+                          <div className="pt-0.5">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={(checked) => {
+                                if (typeof checked === "boolean") {
+                                  handleTaskCompletion(task.id, checked);
+                                }
+                              }}
+                              disabled={completingTask === task.id}
+                            />
+                          </div>
+                          <div>
+                            <h4 className="font-medium line-through text-muted-foreground">
+                              {task.title}
+                            </h4>
+                            <Badge
+                              variant="outline"
+                              className="mt-1 flex items-center space-x-1 w-fit opacity-70"
+                            >
+                              {getTaskIcon(task.type)}
+                              <span>{getTaskTypeLabel(task.type)}</span>
+                            </Badge>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleTaskCompletion(task.id, false)}
+                              disabled={completingTask === task.id}
+                            >
+                              Marcar como pendiente
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/leads/${task.lead_id}`)}
+                            >
+                              Ver detalles del lead
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
 
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>
-                          Completada:{" "}
-                          {formatDate(task.completed_at || task.created_at)}
-                        </span>
+                      {task.description && (
+                        <p className="text-sm text-muted-foreground line-through mb-3">
+                          {task.description}
+                        </p>
+                      )}
+
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span>
+                            Completada:{" "}
+                            {formatDate(task.completed_at || task.created_at)}
+                          </span>
+                        </div>
+                        <div
+                          className="flex items-center cursor-pointer hover:text-primary"
+                          onClick={() => navigate(`/leads/${task.lead_id}`)}
+                        >
+                          <User className="h-3 w-3 mr-1" />
+                          <span>{task.lead.full_name}</span>
+                        </div>
                       </div>
-                      <div
-                        className="flex items-center cursor-pointer hover:text-primary"
-                        onClick={() => navigate(`/leads/${task.lead_id}`)}
-                      >
-                        <User className="h-3 w-3 mr-1" />
-                        <span>{task.lead.full_name}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

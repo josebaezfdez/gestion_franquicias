@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { supabase } from "../../../supabase/supabase";
-import { useAuth } from "../../../supabase/auth";
+import { useAuth } from "@/supabase/auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";

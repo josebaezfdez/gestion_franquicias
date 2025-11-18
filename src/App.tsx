@@ -4,40 +4,39 @@ import {
   Navigate,
   Route,
   Routes,
-  useRoutes,
 } from "react-router-dom";
-import routes from "tempo-routes";
-import LoginForm from "./components/auth/LoginForm";
-import SignUpForm from "./components/auth/SignUpForm";
-import Success from "./components/pages/success";
-import { AuthProvider, useAuth } from "../supabase/auth";
-import AppLayout from "./components/layout/AppLayout";
-import LeadsLayout from "./components/leads";
-import LeadsList from "./components/leads/LeadsList";
-import LeadForm from "./components/leads/LeadForm";
-import LeadDetail from "./components/leads/LeadDetail";
-import LeadDashboard from "./components/leads/LeadDashboard";
-import LeadPipeline from "./components/leads/LeadPipeline";
-import TasksListPage from "./components/leads/TasksListPage";
-import SettingsPage from "./components/settings/SettingsPage";
-import UserManagement from "./components/settings/UserManagement";
-import PermissionGuard from "./components/auth/PermissionGuard";
-import { Toaster } from "./components/ui/toaster";
-import { ThemeProvider } from "./lib/theme-provider";
-import FranchisesLayout from "./components/franchises";
-import FranchisesList from "./components/franchises/FranchisesList";
-import FranchiseForm from "./components/franchises/FranchiseForm";
-import FranchiseDetail from "./components/franchises/FranchiseDetail";
+import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
+import Success from "@/components/pages/success";
+import { AuthProvider, useAuth } from "@/supabase/auth";
+import AppLayout from "@/components/layout/AppLayout";
+import LeadsLayout from "@/components/leads";
+import LeadsList from "@/components/leads/LeadsList";
+import LeadForm from "@/components/leads/LeadForm";
+import LeadDetail from "@/components/leads/LeadDetail";
+import LeadDashboard from "@/components/leads/LeadDashboard";
+import LeadPipeline from "@/components/leads/LeadPipeline";
+import TasksListPage from "@/components/leads/TasksListPage";
+import SettingsPage from "@/components/settings/SettingsPage";
+import UserManagement from "@/components/settings/UserManagement";
+import PermissionGuard from "@/components/auth/PermissionGuard";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/lib/theme-provider";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Cargando...</div>;
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Cargando...</p>
+      </div>
+    </div>;
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -47,11 +46,16 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Cargando...</div>;
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Cargando...</p>
+      </div>
+    </div>;
   }
 
   if (user) {
-    return <Navigate to="/leads/dashboard" />;
+    return <Navigate to="/leads/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -60,7 +64,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route
         path="/login"
@@ -91,13 +95,13 @@ function AppRoutes() {
           </PrivateRoute>
         }
       >
-        <Route index element={<LeadDashboard />} />
+        <Route index element={<Navigate to="/leads/dashboard" replace />} />
         <Route path="dashboard" element={<LeadDashboard />} />
         <Route path="list" element={<LeadsList />} />
         <Route
           path="new"
           element={
-            <PermissionGuard allowedRoles={["superadmin", "admin"]}>
+            <PermissionGuard allowedRoles={["superadmin", "admin", "user"]}>
               <LeadForm />
             </PermissionGuard>
           }
@@ -118,7 +122,7 @@ function AppRoutes() {
       />
 
       {/* Settings Routes */}
-      <Route path="/settings" element={<Navigate to="/settings/account" />} />
+      <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
       <Route
         path="/settings/account"
         element={
@@ -134,7 +138,7 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <AppLayout>
-              <PermissionGuard allowedRoles={["superadmin"]}>
+              <PermissionGuard allowedRoles={["superadmin", "admin"]}>
                 <UserManagement />
               </PermissionGuard>
             </AppLayout>
@@ -142,65 +146,26 @@ function AppRoutes() {
         }
       />
 
-      {/* Franchises Routes */}
-      <Route
-        path="/franchises"
-        element={
-          <PrivateRoute>
-            <AppLayout>
-              <FranchisesLayout />
-            </AppLayout>
-          </PrivateRoute>
-        }
-      >
-        <Route index element={<FranchisesList />} />
-      </Route>
-      <Route
-        path="/franchises/new"
-        element={
-          <PrivateRoute>
-            <AppLayout>
-              <FranchiseForm />
-            </AppLayout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/franchises/:id"
-        element={
-          <PrivateRoute>
-            <AppLayout>
-              <FranchiseDetail />
-            </AppLayout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/franchises/edit/:id"
-        element={
-          <PrivateRoute>
-            <AppLayout>
-              <FranchiseForm isEdit={true} />
-            </AppLayout>
-          </PrivateRoute>
-        }
-      />
-
-      {/* Add this before the catchall route for Tempo */}
-      {import.meta.env.VITE_TEMPO === "true" && (
-        <Route path="/tempobook/*" element={<></>} />
-      )}
-
       {/* Redirect all other routes to login */}
-      <Route path="*" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
 
-// Create a separate component for Tempo routes to ensure they're used within Router context
-// Completely disable TempoRoutesWrapper to avoid conflicts
-function TempoRoutesWrapper() {
-  return null;
+function AppContent() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando aplicación...</p>
+        </div>
+      </div>
+    }>
+      <AppRoutes />
+      <Toaster />
+    </Suspense>
+  );
 }
 
 function App() {
@@ -208,11 +173,7 @@ function App() {
     <BrowserRouter>
       <ThemeProvider defaultTheme="light">
         <AuthProvider>
-          <Suspense fallback={<p>Cargando...</p>}>
-            <TempoRoutesWrapper />
-            <AppRoutes />
-            <Toaster />
-          </Suspense>
+          <AppContent />
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

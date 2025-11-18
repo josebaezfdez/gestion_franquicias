@@ -55,7 +55,11 @@ interface EditLeadFormProps {
   onCancel?: () => void;
 }
 
-function EditLeadForm({ leadId, onSuccess, onCancel }: EditLeadFormProps) {
+export default function EditLeadForm({
+  leadId,
+  onSuccess,
+  onCancel,
+}: EditLeadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -582,5 +586,3 @@ function EditLeadForm({ leadId, onSuccess, onCancel }: EditLeadFormProps) {
     </div>
   );
 }
-
-export default EditLeadForm;
