@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../supabase/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -29,13 +29,19 @@ export default function LeadDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
-    fetchDashboardStats();
+    if (!fetchingRef.current) {
+      fetchDashboardStats();
+    }
   }, []);
 
   async function fetchDashboardStats() {
+    if (fetchingRef.current) return;
+    
     try {
+      fetchingRef.current = true;
       setLoading(true);
       setError(null);
 
@@ -222,6 +228,7 @@ export default function LeadDashboard() {
       });
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }
 
@@ -387,39 +394,39 @@ export default function LeadDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow dark:bg-[#1e2836] dark:border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Tasa de Conversión
               </CardTitle>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-green-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.conversionRate.toFixed(1)}%
               </div>
-              <Progress value={stats.conversionRate} className="h-2 mt-3 bg-gray-200" />
+              <Progress value={stats.conversionRate} className="h-2 mt-3 bg-gray-200 dark:bg-gray-700" />
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow dark:bg-[#1e2836] dark:border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Puntuación Media
               </CardTitle>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                 <Activity className="h-5 w-5 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.averageScore.toFixed(1)}
               </div>
               <Progress
                 value={(stats.averageScore / 100) * 100}
-                className="h-2 mt-3 bg-gray-200"
+                className="h-2 mt-3 bg-gray-200 dark:bg-gray-700"
                 indicatorClassName={
                   stats.averageScore >= 80
                     ? "bg-green-500"
@@ -431,12 +438,12 @@ export default function LeadDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow dark:bg-[#1e2836] dark:border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Ubicaciones
               </CardTitle>
-              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                 <MapPin className="h-5 w-5 text-purple-600" />
               </div>
             </CardHeader>
@@ -450,8 +457,8 @@ export default function LeadDashboard() {
                       key={index}
                       className="flex justify-between items-center"
                     >
-                      <span className="truncate text-gray-700">{location}</span>
-                      <span className="font-semibold text-gray-900">{count}</span>
+                      <span className="truncate text-gray-700 dark:text-gray-300">{location}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{count}</span>
                     </div>
                   ))}
               </div>
@@ -461,9 +468,9 @@ export default function LeadDashboard() {
 
         {/* Pipeline and Sources */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-2 border-0 shadow-sm">
+          <Card className="lg:col-span-2 border-0 shadow-sm dark:bg-[#1e2836] dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-900">
+              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
                 Resumen del Pipeline
               </CardTitle>
             </CardHeader>
@@ -476,15 +483,15 @@ export default function LeadDashboard() {
                         <Badge className={`${getStatusColor(status)} rounded-full`}>
                           {getStatusLabel(status)}
                         </Badge>
-                        <span className="ml-3 text-sm text-gray-700">{count} proyectos</span>
+                        <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">{count} proyectos</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
                         {((count / stats.totalLeads) * 100).toFixed(1)}%
                       </span>
                     </div>
                     <Progress
                       value={(count / stats.totalLeads) * 100}
-                      className="h-2 bg-gray-200"
+                      className="h-2 bg-gray-200 dark:bg-gray-700"
                     />
                   </div>
                 ))}
@@ -492,9 +499,9 @@ export default function LeadDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm dark:bg-[#1e2836] dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-900">
+              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
                 Fuentes de Proyectos
               </CardTitle>
             </CardHeader>
@@ -505,16 +512,16 @@ export default function LeadDashboard() {
                   .map(([source, count]) => (
                     <div key={source} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {getSourceChannelLabel(source || "unknown")}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
                           {count} ({((count / stats.totalLeads) * 100).toFixed(1)}%)
                         </span>
                       </div>
                       <Progress
                         value={(count / stats.totalLeads) * 100}
-                        className="h-2 bg-gray-200"
+                        className="h-2 bg-gray-200 dark:bg-gray-700"
                       />
                     </div>
                   ))}
@@ -524,9 +531,9 @@ export default function LeadDashboard() {
         </div>
 
         {/* Recent Leads */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm dark:bg-[#1e2836] dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
               Proyectos Recientes
             </CardTitle>
           </CardHeader>
@@ -535,20 +542,20 @@ export default function LeadDashboard() {
               {stats.recentLeads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                  className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
                 >
                   <div className="flex items-center">
                     <Avatar className="h-10 w-10 mr-3">
                       <AvatarImage
                         src={`https://api.dicebear.com/7.x/initials/svg?seed=${lead.full_name}`}
                       />
-                      <AvatarFallback className="bg-red-100 text-red-600">
+                      <AvatarFallback className="bg-red-100 text-red-600 dark:bg-red-900/30">
                         {lead.full_name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-gray-900">{lead.full_name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-900 dark:text-white">{lead.full_name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(lead.created_at)}
                       </p>
                     </div>

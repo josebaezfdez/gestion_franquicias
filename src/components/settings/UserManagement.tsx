@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, UserPlus, Edit, Trash2 } from "lucide-react";
+import { Loader2, UserPlus, Edit, Trash2, LayoutGrid, List } from "lucide-react";
 import AddUserDialog from "./AddUserDialog";
 import EditUserDialog from "./EditUserDialog";
 import {
@@ -51,10 +51,21 @@ export default function UserManagement() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1280);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1280);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   async function fetchUsers() {
@@ -83,12 +94,10 @@ export default function UserManagement() {
     try {
       setIsDeleting(true);
 
-      // Prevent deleting yourself
       if (selectedUser.id === currentUser?.id) {
         throw new Error("No puedes eliminar tu propio usuario");
       }
 
-      // Use the supabase.functions.invoke method with the correct function name
       const { data, error } = await supabase.functions.invoke("delete-admin", {
         body: {
           userId: selectedUser.id,
@@ -104,7 +113,6 @@ export default function UserManagement() {
         throw new Error(data?.error || "Error al eliminar el usuario");
       }
 
-      // Delete from public.users as well (in case the edge function didn't do it)
       const { error: publicUserError } = await supabase
         .from("users")
         .delete()
@@ -112,7 +120,6 @@ export default function UserManagement() {
 
       if (publicUserError) {
         console.warn("Error deleting from public.users:", publicUserError);
-        // Continue anyway as the auth user was deleted
       }
 
       toast({
@@ -141,13 +148,13 @@ export default function UserManagement() {
   function getRoleBadgeColor(role: string) {
     switch (role) {
       case "superadmin":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
       case "admin":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
       case "user":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
   }
 
@@ -169,95 +176,181 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <UserPlus className="mr-2 h-4 w-4" /> Añadir Usuario
-        </Button>
+    <div className="container mx-auto py-6 px-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold dark:text-white">Gestión de Usuarios</h1>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* View Toggle - Only on Desktop */}
+          <div className="hidden xl:flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <Button
+              variant={viewMode === "cards" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className={viewMode === "cards" ? "bg-red-600 hover:bg-red-700" : ""}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+              className={viewMode === "table" ? "bg-red-600 hover:bg-red-700" : ""}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={() => setShowAddDialog(true)} className="bg-red-600 hover:bg-red-700 flex-1 sm:flex-none">
+            <UserPlus className="mr-2 h-4 w-4" /> Añadir Usuario
+          </Button>
+        </div>
       </div>
 
-      <Card>
+      <Card className="dark:bg-[#1e2836] dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Usuarios del Sistema</CardTitle>
-          <CardDescription>
+          <CardTitle className="dark:text-white">Usuarios del Sistema</CardTitle>
+          <CardDescription className="dark:text-gray-400">
             Gestiona los usuarios y sus roles en la plataforma
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-              <span>Cargando usuarios...</span>
+              <Loader2 className="h-8 w-8 animate-spin text-red-600 mr-2" />
+              <span className="dark:text-white">Cargando usuarios...</span>
             </div>
           ) : users.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground dark:text-gray-400">
               No hay usuarios registrados
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuario</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead>Fecha de Creación</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar>
-                          <AvatarImage src={user.avatar_url} />
-                          <AvatarFallback>
-                            {user.full_name?.[0] || user.email?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{user.full_name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge className={getRoleBadgeColor(user.role)}>
-                        {getRoleLabel(user.role)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {user.created_at ? formatDate(user.created_at) : "N/A"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowDeleteDialog(true);
-                          }}
-                          disabled={user.id === currentUser?.id}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              {/* Cards View - Mobile/Tablet Default, Desktop Optional */}
+              {(viewMode === "cards" || !isDesktop) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {users.map((user) => (
+                    <Card key={user.id} className="dark:bg-gray-800 dark:border-gray-700">
+                      <CardContent className="pt-6">
+                        <div className="flex flex-col items-center text-center space-y-4">
+                          <Avatar className="h-20 w-20">
+                            <AvatarImage src={user.avatar_url} />
+                            <AvatarFallback className="bg-red-100 text-red-600 text-xl">
+                              {user.full_name?.[0] || user.email?.[0] || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1 w-full">
+                            <h3 className="font-semibold text-lg dark:text-white">{user.full_name}</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 break-all">{user.email}</p>
+                            <Badge className={getRoleBadgeColor(user.role)}>
+                              {getRoleLabel(user.role)}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Creado: {user.created_at ? formatDate(user.created_at) : "N/A"}
+                          </div>
+                          <div className="flex gap-2 w-full">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowEditDialog(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowDeleteDialog(true);
+                              }}
+                              disabled={user.id === currentUser?.id}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Eliminar
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Table View - Desktop Only */}
+              {viewMode === "table" && isDesktop && (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="dark:border-gray-700">
+                        <TableHead className="dark:text-gray-300">Usuario</TableHead>
+                        <TableHead className="dark:text-gray-300">Email</TableHead>
+                        <TableHead className="dark:text-gray-300">Rol</TableHead>
+                        <TableHead className="dark:text-gray-300">Fecha de Creación</TableHead>
+                        <TableHead className="text-right dark:text-gray-300">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id} className="dark:border-gray-700">
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar>
+                                <AvatarImage src={user.avatar_url} />
+                                <AvatarFallback className="bg-red-100 text-red-600">
+                                  {user.full_name?.[0] || user.email?.[0] || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium dark:text-white">{user.full_name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="dark:text-gray-300">{user.email}</TableCell>
+                          <TableCell>
+                            <Badge className={getRoleBadgeColor(user.role)}>
+                              {getRoleLabel(user.role)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="dark:text-gray-300">
+                            {user.created_at ? formatDate(user.created_at) : "N/A"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="dark:hover:bg-gray-700"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowEditDialog(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowDeleteDialog(true);
+                                }}
+                                disabled={user.id === currentUser?.id}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -290,17 +383,17 @@ export default function UserManagement() {
       )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="dark:bg-[#1e2836] dark:border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="dark:text-white">¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-400">
               Esta acción eliminará permanentemente al usuario{" "}
               {selectedUser?.full_name || selectedUser?.email}. Esta acción no
               se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
+            <AlertDialogCancel disabled={isDeleting} className="dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

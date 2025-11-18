@@ -50,6 +50,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { User as UserIcon } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -408,7 +410,7 @@ export default function LeadDetail() {
     return (
       <div className="flex justify-center items-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-        <span className="ml-2">Cargando detalles del proyecto...</span>
+        <span className="ml-2 dark:text-white">Cargando detalles del proyecto...</span>
       </div>
     );
   }
@@ -416,7 +418,7 @@ export default function LeadDetail() {
   if (!lead) {
     return (
       <div className="container mx-auto p-6 text-center">
-        <p>Proyecto no encontrado</p>
+        <p className="dark:text-white">Proyecto no encontrado</p>
         <Button onClick={() => navigate("/leads")} className="mt-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Proyectos
         </Button>
@@ -426,11 +428,12 @@ export default function LeadDetail() {
 
   if (showEditForm) {
     return (
-      <div className="h-full bg-gray-50">
-        <div className="bg-white border-b border-gray-200 px-8 py-6">
+      <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
+        <div className="bg-white dark:bg-[#1e2836] border-b border-gray-200 dark:border-gray-700 px-8 py-6">
           <Button
             variant="ghost"
             onClick={() => setShowEditForm(false)}
+            className="dark:text-white dark:hover:bg-gray-700"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Detalles
           </Button>
@@ -447,17 +450,17 @@ export default function LeadDetail() {
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6">
+      <div className="bg-white dark:bg-[#1e2836] border-b border-gray-200 dark:border-gray-700 px-8 py-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/leads/list")}>
+            <Button variant="ghost" onClick={() => navigate("/leads/list")} className="dark:text-white dark:hover:bg-gray-700">
               <ArrowLeft className="mr-2 h-4 w-4" /> Volver
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{lead.full_name}</h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{lead.full_name}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Añadido el {formatDate(lead.created_at)}
               </p>
             </div>
@@ -465,12 +468,12 @@ export default function LeadDetail() {
           <div className="flex space-x-2">
             {(userRole === "superadmin" || userRole === "admin") && (
               <>
-                <Button variant="outline" onClick={() => setShowEditForm(true)}>
+                <Button variant="outline" onClick={() => setShowEditForm(true)} className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                   <Edit className="mr-2 h-4 w-4" /> Editar
                 </Button>
                 <Button
                   variant="outline"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" /> Eliminar
@@ -576,7 +579,7 @@ export default function LeadDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-sm dark:bg-[#1e2836] dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <Badge
@@ -595,28 +598,28 @@ export default function LeadDetail() {
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{lead.email}</span>
+                      <span className="dark:text-gray-300">{lead.email}</span>
                     </div>
                     <div className="flex items-center">
                       <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{lead.phone}</span>
+                      <span className="dark:text-gray-300">{lead.phone}</span>
                     </div>
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{lead.location}</span>
+                      <span className="dark:text-gray-300">{lead.location}</span>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>
+                      <span className="dark:text-gray-300">
                         Nivel de Interés: {lead.lead_details?.interest_level || 0}
                         /5
                       </span>
                     </div>
                     <div className="flex items-center">
                       <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>
+                      <span className="dark:text-gray-300">
                         ¿Dispone de local?:{" "}
                         {lead.lead_details?.investment_capacity === "yes"
                           ? "Sí"
@@ -627,7 +630,7 @@ export default function LeadDetail() {
                     </div>
                     <div className="flex items-center">
                       <Activity className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Puntuación: </span>
+                      <span className="dark:text-gray-300">Puntuación: </span>
                       <Badge
                         className={`ml-2 ${getScoreColor(lead.lead_details?.score || 0)}`}
                       >
@@ -635,7 +638,7 @@ export default function LeadDetail() {
                       </Badge>
                     </div>
                     <div className="flex items-center mt-2">
-                      <span className="text-sm">
+                      <span className="text-sm dark:text-gray-300">
                         Canal de Origen:{" "}
                         {lead.lead_details?.source_channel || "No especificado"}
                       </span>
@@ -643,12 +646,12 @@ export default function LeadDetail() {
                   </div>
                 </div>
 
-                <Separator className="my-4" />
+                <Separator className="my-4 dark:bg-gray-700" />
 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-medium mb-2">Experiencia Previa</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="font-medium mb-2 dark:text-white">Experiencia Previa</h3>
+                    <p className="text-muted-foreground dark:text-gray-400">
                       {lead.lead_details?.previous_experience !== null &&
                       lead.lead_details?.previous_experience !== ""
                         ? lead.lead_details.previous_experience
@@ -656,8 +659,8 @@ export default function LeadDetail() {
                     </p>
                   </div>
                   <div>
-                    <h3 className="font-medium mb-2">Comentarios Adicionales</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="font-medium mb-2 dark:text-white">Comentarios Adicionales</h3>
+                    <p className="text-muted-foreground dark:text-gray-400">
                       {lead.lead_details?.additional_comments !== null &&
                       lead.lead_details?.additional_comments !== ""
                         ? lead.lead_details.additional_comments
@@ -669,31 +672,31 @@ export default function LeadDetail() {
             </Card>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="history">Historial de Estado</TabsTrigger>
-                <TabsTrigger value="communications">Comunicaciones</TabsTrigger>
-                <TabsTrigger value="tasks">Tareas</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 dark:bg-gray-800">
+                <TabsTrigger value="history" className="dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">Historial de Estado</TabsTrigger>
+                <TabsTrigger value="communications" className="dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">Comunicaciones</TabsTrigger>
+                <TabsTrigger value="tasks" className="dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">Tareas</TabsTrigger>
               </TabsList>
               <TabsContent value="history" className="mt-4">
-                <Card>
+                <Card className="dark:bg-[#1e2836] dark:border-gray-700">
                   <CardHeader>
-                    <CardTitle>Historial de Estado</CardTitle>
+                    <CardTitle className="dark:text-white">Historial de Estado</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {lead.lead_status_history.map((status) => (
                         <div
                           key={status.id}
-                          className="border-l-2 border-gray-200 pl-4 py-2"
+                          className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-2"
                         >
                           <div className="flex justify-between items-start">
                             <div>
                               <Badge className={getStatusColor(status.status)}>
                                 {getStatusLabel(status.status)}
                               </Badge>
-                              <p className="mt-2">{status.notes}</p>
+                              <p className="mt-2 dark:text-gray-300">{status.notes}</p>
                             </div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-sm text-muted-foreground dark:text-gray-400">
                               {formatDateTime(status.created_at)}
                             </div>
                           </div>
@@ -707,7 +710,7 @@ export default function LeadDetail() {
                                   {status.users.full_name?.[0] || "U"}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm">
+                              <span className="text-sm dark:text-gray-300">
                                 {status.users.full_name || "System"}
                               </span>
                             </div>
@@ -719,19 +722,20 @@ export default function LeadDetail() {
                 </Card>
               </TabsContent>
               <TabsContent value="communications" className="mt-4">
-                <Card>
+                <Card className="dark:bg-[#1e2836] dark:border-gray-700">
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Comunicaciones</CardTitle>
+                    <CardTitle className="dark:text-white">Comunicaciones</CardTitle>
                     <Button
                       size="sm"
                       onClick={() => setShowAddCommunicationDialog(true)}
+                      className="bg-red-600 hover:bg-red-700"
                     >
                       <Plus className="h-4 w-4 mr-1" /> Añadir
                     </Button>
                   </CardHeader>
                   <CardContent>
                     {lead.communications.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-4">
+                      <p className="text-center text-muted-foreground dark:text-gray-400 py-4">
                         No hay comunicaciones registradas aún
                       </p>
                     ) : (
@@ -739,20 +743,20 @@ export default function LeadDetail() {
                         {lead.communications.map((comm) => (
                           <div
                             key={comm.id}
-                            className="border-l-2 border-gray-200 pl-4 py-2"
+                            className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-2"
                           >
                             <div className="flex justify-between items-start">
                               <div className="flex-1 mr-2">
-                                <Badge variant="outline">
+                                <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">
                                   <MessageSquare className="h-3 w-3 mr-1" />
                                   {getCommunicationTypeLabel(comm.type)}
                                 </Badge>
-                                <p className="mt-2 whitespace-pre-line">
+                                <p className="mt-2 whitespace-pre-line dark:text-gray-300">
                                   {comm.content}
                                 </p>
                               </div>
                               <div className="flex items-center">
-                                <div className="text-sm text-muted-foreground mr-2">
+                                <div className="text-sm text-muted-foreground dark:text-gray-400 mr-2">
                                   {formatDateTime(comm.created_at)}
                                 </div>
                                 <DropdownMenu>
@@ -760,17 +764,18 @@ export default function LeadDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8"
+                                      className="h-8 w-8 dark:hover:bg-gray-700"
                                     >
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
+                                  <DropdownMenuContent align="end" className="dark:bg-[#1e2836] dark:border-gray-700">
                                     <DropdownMenuItem
                                       onClick={() => {
                                         setCommunicationToEdit(comm.id);
                                         setShowEditCommunicationDialog(true);
                                       }}
+                                      className="dark:text-gray-300 dark:hover:bg-gray-700"
                                     >
                                       <Pencil className="h-4 w-4 mr-2" />
                                       Editar
@@ -780,7 +785,7 @@ export default function LeadDetail() {
                                         setCommunicationToDelete(comm.id);
                                         setShowDeleteCommunicationDialog(true);
                                       }}
-                                      className="text-red-600"
+                                      className="text-red-600 dark:hover:bg-red-900/20"
                                     >
                                       <Trash2 className="h-4 w-4 mr-2" />
                                       Eliminar
@@ -799,7 +804,7 @@ export default function LeadDetail() {
                                     {comm.users.full_name?.[0] || "U"}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="text-sm">
+                                <span className="text-sm dark:text-gray-300">
                                   {comm.users.full_name || "System"}
                                 </span>
                               </div>
@@ -812,10 +817,10 @@ export default function LeadDetail() {
                 </Card>
               </TabsContent>
               <TabsContent value="tasks" className="mt-4">
-                <Card>
+                <Card className="dark:bg-[#1e2836] dark:border-gray-700">
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Tareas</CardTitle>
-                    <Button size="sm" onClick={() => setShowAddTaskDialog(true)}>
+                    <CardTitle className="dark:text-white">Tareas</CardTitle>
+                    <Button size="sm" onClick={() => setShowAddTaskDialog(true)} className="bg-red-600 hover:bg-red-700">
                       <Plus className="h-4 w-4 mr-1" /> Añadir
                     </Button>
                   </CardHeader>
@@ -831,36 +836,36 @@ export default function LeadDetail() {
           </div>
 
           <div>
-            <Card>
+            <Card className="dark:bg-[#1e2836] dark:border-gray-700">
               <CardHeader>
-                <CardTitle>Acciones</CardTitle>
+                <CardTitle className="dark:text-white">Acciones</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {userRole === "superadmin" || userRole === "admin" ? (
                   <>
                     <Button
-                      className="w-full"
+                      className="w-full bg-red-600 hover:bg-red-700"
                       onClick={() => setShowUpdateStatusDialog(true)}
                     >
                       Actualizar Estado
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
                       onClick={() => setShowAddCommunicationDialog(true)}
                     >
                       Añadir Comunicación
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
                       onClick={() => setShowAddTaskDialog(true)}
                     >
                       Programar Tarea
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
                       onClick={() =>
                         window.open(`mailto:${lead.email}`, "_blank")
                       }
@@ -869,9 +874,9 @@ export default function LeadDetail() {
                     </Button>
                   </>
                 ) : (
-                  <div className="p-4 bg-gray-50 rounded-md text-center">
-                    <p className="text-muted-foreground">Modo de solo lectura</p>
-                    <p className="text-xs mt-1">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md text-center">
+                    <p className="text-muted-foreground dark:text-gray-400">Modo de solo lectura</p>
+                    <p className="text-xs mt-1 dark:text-gray-500">
                       No tienes permisos para realizar acciones
                     </p>
                   </div>
@@ -879,9 +884,9 @@ export default function LeadDetail() {
               </CardContent>
             </Card>
 
-            <Card className="mt-6">
+            <Card className="mt-6 dark:bg-[#1e2836] dark:border-gray-700">
               <CardHeader>
-                <CardTitle>Cronología</CardTitle>
+                <CardTitle className="dark:text-white">Cronología</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -894,15 +899,15 @@ export default function LeadDetail() {
                     .slice(0, 5)
                     .map((item) => (
                       <div key={item.id} className="flex items-start space-x-3">
-                        <div className="bg-primary/10 p-2 rounded-full">
+                        <div className="bg-primary/10 dark:bg-red-900/30 p-2 rounded-full">
                           {"status" in item ? (
-                            <Activity className="h-4 w-4 text-primary" />
+                            <Activity className="h-4 w-4 text-primary dark:text-red-400" />
                           ) : (
-                            <MessageSquare className="h-4 w-4 text-primary" />
+                            <MessageSquare className="h-4 w-4 text-primary dark:text-red-400" />
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-medium">
+                          <p className="text-sm font-medium dark:text-white">
                             {"status" in item ? (
                               <>Estado cambiado a {getStatusLabel(item.status)}</>
                             ) : (
@@ -912,7 +917,7 @@ export default function LeadDetail() {
                               </>
                             )}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground dark:text-gray-400">
                             {formatDateTime(item.created_at)}
                           </p>
                         </div>

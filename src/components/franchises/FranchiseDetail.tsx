@@ -148,7 +148,7 @@ export default function FranchiseDetail() {
     return (
       <div className="flex justify-center items-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Cargando datos de la franquicia...</span>
+        <span className="ml-2 dark:text-white">Cargando datos de la franquicia...</span>
       </div>
     );
   }
@@ -156,12 +156,12 @@ export default function FranchiseDetail() {
   if (!franchise) {
     return (
       <div className="max-w-3xl mx-auto p-6">
-        <Card>
+        <Card className="dark:bg-[#1e2836] dark:border-gray-700">
           <CardContent className="pt-6 text-center">
-            <p>No se encontró la franquicia solicitada</p>
+            <p className="dark:text-white">No se encontró la franquicia solicitada</p>
             <Button
               variant="outline"
-              className="mt-4"
+              className="mt-4 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
               onClick={() => navigate("/franchises")}
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Volver al listado
@@ -173,186 +173,193 @@ export default function FranchiseDetail() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/franchises")}
-          className="mr-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Volver
-        </Button>
-        <h1 className="text-3xl font-bold flex-1">{franchise.name}</h1>
-        {isAuthorized && (
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/franchises/edit/${franchise.id}`)}
-            >
-              <Edit className="mr-2 h-4 w-4" /> Editar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-            </Button>
-          </div>
-        )}
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
+      <div className="bg-white dark:bg-[#1e2836] border-b border-gray-200 dark:border-gray-700 px-4 sm:px-8 py-6">
+        <div className="flex items-center mb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/franchises")}
+            className="mr-4 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Volver
+          </Button>
+          <h1 className="text-3xl font-bold flex-1 dark:text-white">{franchise.name}</h1>
+          {isAuthorized && (
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/franchises/edit/${franchise.id}`)}
+                className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+              >
+                <Edit className="mr-2 h-4 w-4" /> Editar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteDialog(true)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Información de la Franquicia</CardTitle>
-              <CardDescription>
-                Detalles completos de la franquicia
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                    Datos Principales
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Building className="h-4 w-4 mr-2 text-primary" />
-                      <div>
-                        <p className="font-medium">{franchise.name}</p>
-                        {franchise.tesis_code && (
-                          <Badge variant="outline" className="mt-1">
-                            Código Tesis: {franchise.tesis_code}
-                          </Badge>
-                        )}
+      <div className="p-4 sm:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card className="dark:bg-[#1e2836] dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="dark:text-white">Información de la Franquicia</CardTitle>
+                <CardDescription className="dark:text-gray-400">
+                  Detalles completos de la franquicia
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground dark:text-gray-400 mb-2">
+                      Datos Principales
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <Building className="h-4 w-4 mr-2 text-primary" />
+                        <div>
+                          <p className="font-medium dark:text-white">{franchise.name}</p>
+                          {franchise.tesis_code && (
+                            <Badge variant="outline" className="mt-1 dark:border-gray-600 dark:text-gray-300">
+                              Código Tesis: {franchise.tesis_code}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2 text-primary" />
+                        <span className="dark:text-gray-300">{franchise.contact_person}</span>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 mr-2 text-primary" />
-                      <span>{franchise.contact_person}</span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground dark:text-gray-400 mb-2">
+                      Ubicación
+                    </h3>
+                    <div className="space-y-1">
+                      <div className="flex items-start">
+                        <MapPin className="h-4 w-4 mr-2 mt-0.5 text-primary" />
+                        <div className="dark:text-gray-300">
+                          <p>{franchise.address}</p>
+                          <p>
+                            {franchise.city}, {franchise.province}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                    Ubicación
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-muted-foreground dark:text-gray-400 mb-2">
+                    Contacto
                   </h3>
-                  <div className="space-y-1">
-                    <div className="flex items-start">
-                      <MapPin className="h-4 w-4 mr-2 mt-0.5 text-primary" />
-                      <div>
-                        <p>{franchise.address}</p>
-                        <p>
-                          {franchise.city}, {franchise.province}
-                        </p>
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 mr-2 text-primary" />
+                      <span className="dark:text-gray-300">{franchise.phone}</span>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  Contacto
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center">
-                    <Phone className="h-4 w-4 mr-2 text-primary" />
-                    <span>{franchise.phone}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Mail className="h-4 w-4 mr-2 text-primary" />
-                    <a
-                      href={`mailto:${franchise.email}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {franchise.email}
-                    </a>
-                  </div>
-                  {franchise.website && (
-                    <div className="flex items-center md:col-span-2">
-                      <Globe className="h-4 w-4 mr-2 text-primary" />
+                    <div className="flex items-center">
+                      <Mail className="h-4 w-4 mr-2 text-primary" />
                       <a
-                        href={
-                          franchise.website.startsWith("http")
-                            ? franchise.website
-                            : `https://${franchise.website}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        href={`mailto:${franchise.email}`}
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        {franchise.website.replace(/^https?:\/\//i, "")}
+                        {franchise.email}
                       </a>
+                    </div>
+                    {franchise.website && (
+                      <div className="flex items-center md:col-span-2">
+                        <Globe className="h-4 w-4 mr-2 text-primary" />
+                        <a
+                          href={
+                            franchise.website.startsWith("http")
+                              ? franchise.website
+                              : `https://${franchise.website}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {franchise.website.replace(/^https?:\/\//i, "")}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="border-t border-gray-100 dark:border-gray-700 pt-4 text-sm text-muted-foreground dark:text-gray-400">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>Creado: {formatDate(franchise.created_at)}</span>
+                  </div>
+                  {franchise.updated_at && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>Actualizado: {formatDate(franchise.updated_at)}</span>
                     </div>
                   )}
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t border-gray-100 pt-4 text-sm text-muted-foreground">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  <span>Creado: {formatDate(franchise.created_at)}</span>
-                </div>
-                {franchise.updated_at && (
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>Actualizado: {formatDate(franchise.updated_at)}</span>
-                  </div>
-                )}
-              </div>
-            </CardFooter>
-          </Card>
-        </div>
+              </CardFooter>
+            </Card>
+          </div>
 
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones</CardTitle>
-              <CardDescription>
-                Operaciones disponibles para esta franquicia
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() =>
-                  window.open(`mailto:${franchise.email}`, "_blank")
-                }
-              >
-                <Mail className="mr-2 h-4 w-4" /> Enviar Email
-              </Button>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() =>
-                  (window.location.href = `tel:${franchise.phone}`)
-                }
-              >
-                <Phone className="mr-2 h-4 w-4" /> Llamar
-              </Button>
-            </CardContent>
-          </Card>
+          <div>
+            <Card className="dark:bg-[#1e2836] dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="dark:text-white">Acciones</CardTitle>
+                <CardDescription className="dark:text-gray-400">
+                  Operaciones disponibles para esta franquicia
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  className="w-full bg-red-600 hover:bg-red-700"
+                  variant="outline"
+                  onClick={() =>
+                    window.open(`mailto:${franchise.email}`, "_blank")
+                  }
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Enviar Email
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() =>
+                    (window.location.href = `tel:${franchise.phone}`)
+                  }
+                  className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+                >
+                  <Phone className="mr-2 h-4 w-4" /> Llamar
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="dark:bg-[#1e2836] dark:border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="dark:text-white">¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-400">
               Esta acción eliminará permanentemente la franquicia{" "}
               <strong>{franchise.name}</strong>. Esta acción no se puede
               deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
+            <AlertDialogCancel disabled={isDeleting} className="dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

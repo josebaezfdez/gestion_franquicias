@@ -177,21 +177,21 @@ export default function TasksListPage() {
     return (
       <div className="flex justify-center items-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-        <span className="ml-2">Cargando tareas...</span>
+        <span className="ml-2 dark:text-white">Cargando tareas...</span>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
       {/* Header */}
-      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
-        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+      <div className="bg-white dark:bg-[#1e2836] border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 dark:bg-red-900/30 p-2 sm:p-3 rounded-lg">
           <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
         </div>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mis Tareas</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Mis Tareas</h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
             {pendingTasks.length} tareas pendientes
           </p>
         </div>
@@ -204,23 +204,23 @@ export default function TasksListPage() {
             <Input
               type="search"
               placeholder="Buscar tareas o proyectos..."
-              className="pl-8"
+              className="pl-8 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline">
+          <Button variant="outline" className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
             <Filter className="mr-2 h-4 w-4" /> Filtrar
           </Button>
         </div>
 
         <div className="space-y-6">
           <div>
-            <h3 className="text-xl font-semibold mb-4">
+            <h3 className="text-xl font-semibold mb-4 dark:text-white">
               Tareas Pendientes ({pendingTasks.length})
             </h3>
             {pendingTasks.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
+              <p className="text-center text-muted-foreground dark:text-gray-400 py-4">
                 No hay tareas pendientes
               </p>
             ) : (
@@ -228,7 +228,7 @@ export default function TasksListPage() {
                 {pendingTasks.map((task) => (
                   <Card
                     key={task.id}
-                    className="hover:shadow-md transition-shadow"
+                    className="hover:shadow-md transition-shadow dark:bg-[#1e2836] dark:border-gray-700"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -242,13 +242,14 @@ export default function TasksListPage() {
                                 }
                               }}
                               disabled={completingTask === task.id}
+                              className="dark:border-gray-600"
                             />
                           </div>
                           <div>
-                            <h4 className="font-medium">{task.title}</h4>
+                            <h4 className="font-medium dark:text-white">{task.title}</h4>
                             <Badge
                               variant="outline"
-                              className="mt-1 flex items-center space-x-1 w-fit"
+                              className="mt-1 flex items-center space-x-1 w-fit dark:border-gray-600 dark:text-gray-300"
                             >
                               {getTaskIcon(task.type)}
                               <span>{getTaskTypeLabel(task.type)}</span>
@@ -260,21 +261,23 @@ export default function TasksListPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 dark:hover:bg-gray-700"
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="dark:bg-[#1e2836] dark:border-gray-700">
                             <DropdownMenuItem
                               onClick={() => handleTaskCompletion(task.id, true)}
                               disabled={completingTask === task.id}
+                              className="dark:text-gray-300 dark:hover:bg-gray-700"
                             >
                               Marcar como completada
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator className="dark:bg-gray-700" />
                             <DropdownMenuItem
                               onClick={() => navigate(`/leads/${task.lead_id}`)}
+                              className="dark:text-gray-300 dark:hover:bg-gray-700"
                             >
                               Ver detalles del lead
                             </DropdownMenuItem>
@@ -283,18 +286,18 @@ export default function TasksListPage() {
                       </div>
 
                       {task.description && (
-                        <p className="text-sm text-muted-foreground mb-3">
+                        <p className="text-sm text-muted-foreground dark:text-gray-400 mb-3">
                           {task.description}
                         </p>
                       )}
 
-                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <div className="flex justify-between items-center text-sm text-muted-foreground dark:text-gray-400">
                         <div className="flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
                           <span>Vence: {formatDate(task.due_date)}</span>
                         </div>
                         <div
-                          className="flex items-center cursor-pointer hover:text-primary"
+                          className="flex items-center cursor-pointer hover:text-primary dark:hover:text-red-400"
                           onClick={() => navigate(`/leads/${task.lead_id}`)}
                         >
                           <User className="h-3 w-3 mr-1" />
@@ -309,11 +312,11 @@ export default function TasksListPage() {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4">
+            <h3 className="text-xl font-semibold mb-4 dark:text-white">
               Tareas Completadas ({completedTasks.length})
             </h3>
             {completedTasks.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
+              <p className="text-center text-muted-foreground dark:text-gray-400 py-4">
                 No hay tareas completadas
               </p>
             ) : (
@@ -321,7 +324,7 @@ export default function TasksListPage() {
                 {completedTasks.map((task) => (
                   <Card
                     key={task.id}
-                    className="bg-gray-50 hover:shadow-md transition-shadow"
+                    className="bg-gray-50 dark:bg-gray-800 hover:shadow-md transition-shadow dark:border-gray-700"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -335,15 +338,16 @@ export default function TasksListPage() {
                                 }
                               }}
                               disabled={completingTask === task.id}
+                              className="dark:border-gray-600"
                             />
                           </div>
                           <div>
-                            <h4 className="font-medium line-through text-muted-foreground">
+                            <h4 className="font-medium line-through text-muted-foreground dark:text-gray-400">
                               {task.title}
                             </h4>
                             <Badge
                               variant="outline"
-                              className="mt-1 flex items-center space-x-1 w-fit opacity-70"
+                              className="mt-1 flex items-center space-x-1 w-fit opacity-70 dark:border-gray-600 dark:text-gray-400"
                             >
                               {getTaskIcon(task.type)}
                               <span>{getTaskTypeLabel(task.type)}</span>
@@ -355,21 +359,23 @@ export default function TasksListPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 dark:hover:bg-gray-700"
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="dark:bg-[#1e2836] dark:border-gray-700">
                             <DropdownMenuItem
                               onClick={() => handleTaskCompletion(task.id, false)}
                               disabled={completingTask === task.id}
+                              className="dark:text-gray-300 dark:hover:bg-gray-700"
                             >
                               Marcar como pendiente
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator className="dark:bg-gray-700" />
                             <DropdownMenuItem
                               onClick={() => navigate(`/leads/${task.lead_id}`)}
+                              className="dark:text-gray-300 dark:hover:bg-gray-700"
                             >
                               Ver detalles del lead
                             </DropdownMenuItem>
@@ -378,12 +384,12 @@ export default function TasksListPage() {
                       </div>
 
                       {task.description && (
-                        <p className="text-sm text-muted-foreground line-through mb-3">
+                        <p className="text-sm text-muted-foreground dark:text-gray-400 line-through mb-3">
                           {task.description}
                         </p>
                       )}
 
-                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <div className="flex justify-between items-center text-sm text-muted-foreground dark:text-gray-400">
                         <div className="flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
                           <span>
@@ -392,7 +398,7 @@ export default function TasksListPage() {
                           </span>
                         </div>
                         <div
-                          className="flex items-center cursor-pointer hover:text-primary"
+                          className="flex items-center cursor-pointer hover:text-primary dark:hover:text-red-400"
                           onClick={() => navigate(`/leads/${task.lead_id}`)}
                         >
                           <User className="h-3 w-3 mr-1" />

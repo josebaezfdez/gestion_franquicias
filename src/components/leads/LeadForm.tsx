@@ -105,16 +105,16 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
 
   if (!isAuthorized) {
     return (
-      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md text-center">
-        <h2 className="text-2xl font-bold mb-4">Acceso Restringido</h2>
-        <p className="text-gray-600 mb-4">
+      <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-[#1e2836] rounded-lg shadow-md text-center">
+        <h2 className="text-2xl font-bold mb-4 dark:text-white">Acceso Restringido</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
           No tienes permisos para crear nuevos candidatos. Contacta con un
           administrador si necesitas acceso.
         </p>
         <Button variant="outline" onClick={() => {
           if (navigate) navigate("/leads/list");
           else if (onCancel) onCancel();
-        }}>
+        }} className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
           Volver a la lista de candidatos
         </Button>
       </div>
@@ -283,22 +283,22 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
       {/* Header */}
-      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
-        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+      <div className="bg-white dark:bg-[#1e2836] border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 dark:bg-red-900/30 p-2 sm:p-3 rounded-lg">
           <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
         </div>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Registrar Nuevo Candidato</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Registrar Nuevo Candidato</h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
             Complete el formulario para añadir un nuevo lead al sistema
           </p>
         </div>
       </div>
 
       <div className="p-4 sm:p-8">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-[#1e2836] rounded-lg shadow-md p-4 sm:p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,9 +307,9 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="full_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre Completo</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Nombre Completo</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" {...field} />
+                        <Input placeholder="John Doe" {...field} className="dark:bg-gray-700 dark:text-white dark:border-gray-600" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -321,12 +321,13 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Correo Electrónico</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Correo Electrónico</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           placeholder="john@example.com"
                           {...field}
+                          className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                         />
                       </FormControl>
                       <FormMessage />
@@ -339,9 +340,9 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Número de Teléfono</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Número de Teléfono</FormLabel>
                       <FormControl>
-                        <Input placeholder="+1234567890" {...field} />
+                        <Input placeholder="+1234567890" {...field} className="dark:bg-gray-700 dark:text-white dark:border-gray-600" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -353,9 +354,9 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ubicación</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Ubicación</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ciudad, País" {...field} />
+                        <Input placeholder="Ciudad, País" {...field} className="dark:bg-gray-700 dark:text-white dark:border-gray-600" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -369,11 +370,12 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="previous_experience"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Experiencia Previa</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Experiencia Previa</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Describa cualquier experiencia relevante en el sector de seguros"
                           {...field}
+                          className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                         />
                       </FormControl>
                       <FormMessage />
@@ -386,19 +388,19 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="investment_capacity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>¿Dispone de local?</FormLabel>
+                      <FormLabel className="dark:text-gray-300">¿Dispone de local?</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
                             <SelectValue placeholder="Seleccione una opción" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="yes">Sí</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
+                        <SelectContent className="dark:bg-[#1e2836] dark:border-gray-700">
+                          <SelectItem value="yes" className="dark:text-gray-300 dark:hover:bg-gray-700">Sí</SelectItem>
+                          <SelectItem value="no" className="dark:text-gray-300 dark:hover:bg-gray-700">No</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -411,25 +413,25 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="source_channel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Canal de Origen</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Canal de Origen</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
                             <SelectValue placeholder="Seleccione canal de origen" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="website">Sitio Web</SelectItem>
-                          <SelectItem value="referral">Referencia</SelectItem>
-                          <SelectItem value="social_media">
+                        <SelectContent className="dark:bg-[#1e2836] dark:border-gray-700">
+                          <SelectItem value="website" className="dark:text-gray-300 dark:hover:bg-gray-700">Sitio Web</SelectItem>
+                          <SelectItem value="referral" className="dark:text-gray-300 dark:hover:bg-gray-700">Referencia</SelectItem>
+                          <SelectItem value="social_media" className="dark:text-gray-300 dark:hover:bg-gray-700">
                             Redes Sociales
                           </SelectItem>
-                          <SelectItem value="event">Evento</SelectItem>
-                          <SelectItem value="advertisement">Publicidad</SelectItem>
-                          <SelectItem value="other">Otro</SelectItem>
+                          <SelectItem value="event" className="dark:text-gray-300 dark:hover:bg-gray-700">Evento</SelectItem>
+                          <SelectItem value="advertisement" className="dark:text-gray-300 dark:hover:bg-gray-700">Publicidad</SelectItem>
+                          <SelectItem value="other" className="dark:text-gray-300 dark:hover:bg-gray-700">Otro</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -442,22 +444,22 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                   name="interest_level"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nivel de Interés</FormLabel>
+                      <FormLabel className="dark:text-gray-300">Nivel de Interés</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
                             <SelectValue placeholder="Seleccione nivel de interés" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1">1 - Muy Bajo</SelectItem>
-                          <SelectItem value="2">2 - Bajo</SelectItem>
-                          <SelectItem value="3">3 - Medio</SelectItem>
-                          <SelectItem value="4">4 - Alto</SelectItem>
-                          <SelectItem value="5">5 - Muy Alto</SelectItem>
+                        <SelectContent className="dark:bg-[#1e2836] dark:border-gray-700">
+                          <SelectItem value="1" className="dark:text-gray-300 dark:hover:bg-gray-700">1 - Muy Bajo</SelectItem>
+                          <SelectItem value="2" className="dark:text-gray-300 dark:hover:bg-gray-700">2 - Bajo</SelectItem>
+                          <SelectItem value="3" className="dark:text-gray-300 dark:hover:bg-gray-700">3 - Medio</SelectItem>
+                          <SelectItem value="4" className="dark:text-gray-300 dark:hover:bg-gray-700">4 - Alto</SelectItem>
+                          <SelectItem value="5" className="dark:text-gray-300 dark:hover:bg-gray-700">5 - Muy Alto</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -471,11 +473,12 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                 name="additional_comments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Comentarios Adicionales</FormLabel>
+                    <FormLabel className="dark:text-gray-300">Comentarios Adicionales</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Cualquier información adicional sobre el candidato"
                         {...field}
+                        className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                       />
                     </FormControl>
                     <FormMessage />
@@ -483,7 +486,7 @@ export default function LeadForm({ onSuccess, onCancel }: LeadFormProps = {}) {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={isSubmitting}>
                 {isSubmitting ? "Enviando..." : "Registrar Candidato"}
               </Button>
             </form>

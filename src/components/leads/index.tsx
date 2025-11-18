@@ -45,7 +45,16 @@ export function LeadsLayout() {
         onValueChange={handleTabChange}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-5">
+        {/* Mobile/Tablet: 4 columns (without Pipeline) */}
+        <TabsList className="grid w-full grid-cols-4 xl:hidden">
+          <TabsTrigger value="dashboard">Panel</TabsTrigger>
+          <TabsTrigger value="list">Lista</TabsTrigger>
+          <TabsTrigger value="tasks">Tareas</TabsTrigger>
+          <TabsTrigger value="new">Nuevo</TabsTrigger>
+        </TabsList>
+        
+        {/* Desktop: 5 columns (with Pipeline) */}
+        <TabsList className="hidden xl:grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">Panel</TabsTrigger>
           <TabsTrigger value="list">Lista</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>

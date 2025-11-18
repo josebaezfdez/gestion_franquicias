@@ -149,7 +149,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             <Link
               to="/leads/pipeline"
-              className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              className={`hidden xl:flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                 isActive("/leads/pipeline")
                   ? "bg-red-600 text-white shadow-lg"
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"

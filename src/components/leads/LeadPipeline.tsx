@@ -328,23 +328,23 @@ export default function LeadPipeline() {
     return (
       <div className="flex justify-center items-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-        <span className="ml-2">Cargando pipeline...</span>
+        <span className="ml-2 dark:text-white">Cargando pipeline...</span>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
       {/* Header */}
-      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
-        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+      <div className="bg-white dark:bg-[#1e2836] border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 dark:bg-red-900/30 p-2 sm:p-3 rounded-lg">
           <GitBranch className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
         </div>
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Pipeline de Leads</h1>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Pipeline de Leads</h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {leads.length} leads en total
               </p>
             </div>
@@ -356,12 +356,12 @@ export default function LeadPipeline() {
                       variant="outline"
                       size="icon"
                       onClick={() => setShowHelp(!showHelp)}
-                      className="rounded-lg"
+                      className="rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
                     >
                       <Info className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
                     <p>Mostrar/ocultar ayuda</p>
                   </TooltipContent>
                 </Tooltip>
@@ -373,7 +373,7 @@ export default function LeadPipeline() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="cursor-default rounded-lg"
+                      className="cursor-default rounded-lg dark:bg-gray-700 dark:border-gray-600"
                     >
                       {isAuthorized ? (
                         <Unlock className="h-4 w-4 text-green-600" />
@@ -382,7 +382,7 @@ export default function LeadPipeline() {
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
                     <p>
                       {isAuthorized
                         ? "Tienes permisos para mover leads"
@@ -397,14 +397,14 @@ export default function LeadPipeline() {
       </div>
 
       {showHelp && (
-        <div className="bg-blue-50 border-b border-blue-200 px-8 py-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-8 py-4">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-blue-800">
+              <h3 className="font-medium text-blue-800 dark:text-blue-300">
                 Cómo usar el Pipeline
               </h3>
-              <ul className="mt-2 text-sm text-blue-700 space-y-1">
+              <ul className="mt-2 text-sm text-blue-700 dark:text-blue-300 space-y-1">
                 <li>
                   • Cada columna representa una etapa en el proceso de ventas
                 </li>
@@ -440,17 +440,17 @@ export default function LeadPipeline() {
               {stages.map((stage) => (
                 <div
                   key={stage.id}
-                  className="flex flex-col bg-gray-100 rounded-xl"
+                  className="flex flex-col bg-gray-100 dark:bg-gray-800 rounded-xl"
                   style={{ width: "280px", minWidth: "280px" }}
                 >
-                  <div className="p-4 border-b border-gray-200 bg-white rounded-t-xl">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1e2836] rounded-t-xl">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-900 text-sm">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                         {stage.name}
                       </h3>
                       <Badge
                         variant="secondary"
-                        className="ml-2 bg-gray-200 text-gray-700 rounded-full"
+                        className="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
                       >
                         {leadsByStage[stage.id]?.length || 0}
                       </Badge>
@@ -463,12 +463,12 @@ export default function LeadPipeline() {
                         {...provided.droppableProps}
                         ref={provided.innerRef}
                         className={`p-3 flex-1 overflow-y-auto rounded-b-xl transition-colors ${
-                          snapshot.isDraggingOver ? "bg-gray-200" : "bg-gray-100"
+                          snapshot.isDraggingOver ? "bg-gray-200 dark:bg-gray-700" : "bg-gray-100 dark:bg-gray-800"
                         }`}
                         style={{ minHeight: "500px" }}
                       >
                         {leadsByStage[stage.id]?.length === 0 && (
-                          <div className="flex flex-col items-center justify-center h-24 text-center p-4 text-sm text-gray-400">
+                          <div className="flex flex-col items-center justify-center h-24 text-center p-4 text-sm text-gray-400 dark:text-gray-500">
                             <p>No hay leads</p>
                           </div>
                         )}
@@ -486,7 +486,7 @@ export default function LeadPipeline() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`mb-3 ${isAuthorized ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} hover:shadow-lg transition-all border-0 ${snapshot.isDragging ? "shadow-2xl rotate-2" : "shadow-sm"}`}
+                                  className={`mb-3 ${isAuthorized ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} hover:shadow-lg transition-all border-0 dark:bg-[#1e2836] dark:border-gray-700 ${snapshot.isDragging ? "shadow-2xl rotate-2" : "shadow-sm"}`}
                                   onClick={() => navigate(`/leads/${lead.id}`)}
                                 >
                                   <CardContent className="p-4">
@@ -496,11 +496,11 @@ export default function LeadPipeline() {
                                           <AvatarImage
                                             src={`https://api.dicebear.com/7.x/initials/svg?seed=${lead.full_name}`}
                                           />
-                                          <AvatarFallback className="bg-red-100 text-red-600 text-xs">
+                                          <AvatarFallback className="bg-red-100 text-red-600 dark:bg-red-900/30 text-xs">
                                             {lead.full_name.charAt(0)}
                                           </AvatarFallback>
                                         </Avatar>
-                                        <h4 className="font-semibold text-sm text-gray-900">
+                                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white">
                                           {lead.full_name}
                                         </h4>
                                       </div>
@@ -516,25 +516,25 @@ export default function LeadPipeline() {
                                       )}
                                     </div>
 
-                                    <div className="text-xs text-gray-600 space-y-2">
+                                    <div className="text-xs text-gray-600 dark:text-gray-300 space-y-2">
                                       <div className="flex items-center">
-                                        <Mail className="h-3.5 w-3.5 mr-2 text-gray-400" />
+                                        <Mail className="h-3.5 w-3.5 mr-2 text-gray-400 dark:text-gray-500" />
                                         <span className="truncate">
                                           {lead.email}
                                         </span>
                                       </div>
                                       <div className="flex items-center">
-                                        <Phone className="h-3.5 w-3.5 mr-2 text-gray-400" />
+                                        <Phone className="h-3.5 w-3.5 mr-2 text-gray-400 dark:text-gray-500" />
                                         <span>{lead.phone}</span>
                                       </div>
                                       <div className="flex items-center">
-                                        <User className="h-3.5 w-3.5 mr-2 text-gray-400" />
+                                        <User className="h-3.5 w-3.5 mr-2 text-gray-400 dark:text-gray-500" />
                                         <span>{lead.location}</span>
                                       </div>
                                     </div>
 
-                                    <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-                                      <span className="text-xs text-gray-500">
+                                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">
                                         {getSourceChannelLabel(
                                           lead.lead_details?.[0]
                                             ?.source_channel,
@@ -543,10 +543,10 @@ export default function LeadPipeline() {
 
                                       {lead.lead_details?.[0]?.score && (
                                         <div className="flex items-center">
-                                          <span className="text-xs font-semibold text-gray-700 mr-2">
+                                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 mr-2">
                                             {lead.lead_details[0].score}
                                           </span>
-                                          <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                                          <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                                             <div
                                               className="h-1.5 rounded-full bg-red-600"
                                               style={{
@@ -579,7 +579,7 @@ export default function LeadPipeline() {
       ) : (
         <div className="flex justify-center items-center p-8">
           <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-          <span className="ml-2">Preparando pipeline...</span>
+          <span className="ml-2 dark:text-white">Preparando pipeline...</span>
         </div>
       )}
     </div>

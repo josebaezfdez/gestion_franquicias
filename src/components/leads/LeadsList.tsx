@@ -270,23 +270,23 @@ export default function LeadsList() {
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
       {/* Header */}
-      <div className="bg-white border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
-        <div className="bg-red-100 p-2 sm:p-3 rounded-lg">
+      <div className="bg-white dark:bg-[#1e2836] border-l-4 border-l-red-600 px-4 sm:px-8 py-6 flex items-start gap-3 sm:gap-4">
+        <div className="bg-red-100 dark:bg-red-900/30 p-2 sm:p-3 rounded-lg">
           <Building className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
         </div>
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Leads</h1>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Leads</h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {filteredLeads.length} leads en total
               </p>
             </div>
             {(userRole === "superadmin" || userRole === "admin") && (
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                <Button variant="outline" onClick={() => setShowImportDialog(true)} className="flex-1 sm:flex-none">
+                <Button variant="outline" onClick={() => setShowImportDialog(true)} className="flex-1 sm:flex-none dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                   <Upload className="mr-2 h-4 w-4" /> Importar CSV
                 </Button>
                 <Button onClick={() => navigate("/leads/new")} className="bg-red-600 hover:bg-red-700 flex-1 sm:flex-none">
@@ -305,7 +305,7 @@ export default function LeadsList() {
             <Input
               type="search"
               placeholder="Buscar leads..."
-              className="pl-8"
+              className="pl-8 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -314,22 +314,22 @@ export default function LeadsList() {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={showFilters ? "bg-slate-100" : ""}
+                className={`${showFilters ? "bg-slate-100 dark:bg-gray-700" : ""} dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600`}
               >
                 <Filter className="mr-2 h-4 w-4" /> Filtrar
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-4" align="end">
+            <PopoverContent className="w-80 p-4 dark:bg-[#1e2836] dark:border-gray-700" align="end">
               <div className="space-y-4">
-                <h4 className="font-medium">Filtros</h4>
+                <h4 className="font-medium dark:text-white">Filtros</h4>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Estado</label>
+                  <label className="text-sm font-medium dark:text-gray-300">Estado</label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
                       <SelectValue placeholder="Todos los estados" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-[#1e2836] dark:border-gray-700">
                       <SelectItem value="all">Todos los estados</SelectItem>
                       <SelectItem value="new_contact">Nuevo Contacto</SelectItem>
                       <SelectItem value="first_contact">
@@ -357,12 +357,12 @@ export default function LeadsList() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Fuente</label>
+                  <label className="text-sm font-medium dark:text-gray-300">Fuente</label>
                   <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
                       <SelectValue placeholder="Todas las fuentes" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-[#1e2836] dark:border-gray-700">
                       <SelectItem value="all">Todas las fuentes</SelectItem>
                       <SelectItem value="website">Sitio Web</SelectItem>
                       <SelectItem value="referral">Referencia</SelectItem>
@@ -375,12 +375,12 @@ export default function LeadsList() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Fecha de creación</label>
+                  <label className="text-sm font-medium dark:text-gray-300">Fecha de creación</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal"
+                        className="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600"
                       >
                         <Calendar className="mr-2 h-4 w-4" />
                         {dateFilter ? (
@@ -390,12 +390,13 @@ export default function LeadsList() {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 dark:bg-[#1e2836] dark:border-gray-700" align="start">
                       <CalendarComponent
                         mode="single"
                         selected={dateFilter}
                         onSelect={setDateFilter}
                         initialFocus
+                        className="dark:bg-[#1e2836]"
                       />
                     </PopoverContent>
                   </Popover>
@@ -410,10 +411,11 @@ export default function LeadsList() {
                       setSourceFilter("");
                       setDateFilter(undefined);
                     }}
+                    className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   >
                     <X className="mr-2 h-4 w-4" /> Limpiar
                   </Button>
-                  <Button size="sm" onClick={() => setShowFilters(false)}>
+                  <Button size="sm" onClick={() => setShowFilters(false)} className="bg-red-600 hover:bg-red-700">
                     Aplicar filtros
                   </Button>
                 </div>
@@ -423,13 +425,13 @@ export default function LeadsList() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                 <ArrowUpDown className="mr-2 h-4 w-4" /> Ordenar
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56" align="end">
+            <PopoverContent className="w-56 dark:bg-[#1e2836] dark:border-gray-700" align="end">
               <div className="space-y-2">
-                <h4 className="font-medium mb-2">Ordenar por</h4>
+                <h4 className="font-medium mb-2 dark:text-white">Ordenar por</h4>
 
                 <div className="grid gap-1">
                   <Button
@@ -548,24 +550,24 @@ export default function LeadsList() {
         {loading ? (
           <div className="flex justify-center items-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-            <span className="ml-2">Cargando leads...</span>
+            <span className="ml-2 dark:text-white">Cargando leads...</span>
           </div>
         ) : filteredLeads.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-muted-foreground">No se encontraron leads</p>
+            <p className="text-muted-foreground dark:text-gray-400">No se encontraron leads</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredLeads.map((lead) => (
               <Card
                 key={lead.id}
-                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer dark:bg-[#1e2836] dark:border-gray-700"
                 onClick={() => navigate(`/leads/${lead.id}`)}
               >
                 <CardContent className="p-0">
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg truncate">
+                      <h3 className="font-semibold text-lg truncate dark:text-white">
                         {lead.full_name}
                       </h3>
                       <Badge
@@ -579,7 +581,7 @@ export default function LeadsList() {
                       </Badge>
                     </div>
 
-                    <div className="space-y-2 text-sm text-gray-600">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                       <div className="flex items-center">
                         <Mail className="h-4 w-4 mr-2" />
                         <span className="truncate">{lead.email}</span>
@@ -599,10 +601,10 @@ export default function LeadsList() {
                     </div>
                   </div>
 
-                  <div className="border-t p-4 bg-gray-50 flex justify-between items-center">
+                  <div className="border-t dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
                     <div>
-                      <span className="text-xs text-gray-500">Fuente:</span>
-                      <Badge variant="outline" className="ml-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Fuente:</span>
+                      <Badge variant="outline" className="ml-2 dark:border-gray-600 dark:text-gray-300">
                         {getSourceChannelLabel(
                           Array.isArray(lead.lead_details) &&
                             lead.lead_details.length > 0
@@ -612,7 +614,7 @@ export default function LeadsList() {
                       </Badge>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-500">Puntuación:</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Puntuación:</span>
                       <Badge
                         className={`ml-2 ${getScoreColor(
                           Array.isArray(lead.lead_details) &&

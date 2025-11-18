@@ -141,7 +141,7 @@ export default function AccountSettings() {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        <span>Cargando datos del perfil...</span>
+        <span className="dark:text-white">Cargando datos del perfil...</span>
       </div>
     );
   }
@@ -151,14 +151,14 @@ export default function AccountSettings() {
       <div className="flex items-center space-x-4">
         <Avatar className="h-20 w-20">
           <AvatarImage src={userData?.avatar_url} />
-          <AvatarFallback>
+          <AvatarFallback className="bg-red-100 text-red-600 dark:bg-red-900/30">
             {userData?.full_name?.[0] || userData?.email?.[0] || "U"}
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-xl font-semibold">{userData?.full_name}</h3>
-          <p className="text-muted-foreground">{userData?.email}</p>
-          <p className="text-sm mt-1">
+          <h3 className="text-xl font-semibold dark:text-white">{userData?.full_name}</h3>
+          <p className="text-muted-foreground dark:text-gray-400">{userData?.email}</p>
+          <p className="text-sm mt-1 dark:text-gray-300">
             Rol:{" "}
             <span className="font-medium">
               {getRoleLabel(userData?.role || "user")}
@@ -167,8 +167,8 @@ export default function AccountSettings() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Editar Perfil</h2>
+      <div className="bg-white dark:bg-[#1e2836] p-6 rounded-lg shadow dark:border dark:border-gray-700">
+        <h2 className="text-xl font-semibold mb-4 dark:text-white">Editar Perfil</h2>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -177,9 +177,9 @@ export default function AccountSettings() {
               name="full_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre Completo</FormLabel>
+                  <FormLabel className="dark:text-gray-300">Nombre Completo</FormLabel>
                   <FormControl>
-                    <Input placeholder="Tu nombre completo" {...field} />
+                    <Input placeholder="Tu nombre completo" {...field} className="dark:bg-gray-700 dark:text-white dark:border-gray-600" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,7 +187,7 @@ export default function AccountSettings() {
             />
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="bg-red-600 hover:bg-red-700">
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -32,6 +32,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ImportFranchisesDialog from "./ImportFranchisesDialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { Building } from "lucide-react";
 
 type Franchise = {
   id: string;
@@ -97,127 +99,133 @@ export default function FranchisesList() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Franquicias en Vigor</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowImportDialog(true)}>
-            <Upload className="mr-2 h-4 w-4" /> Importar CSV
-          </Button>
-          <Button onClick={() => navigate("/franchises/new")}>
-            <Plus className="mr-2 h-4 w-4" /> Nueva Franquicia
-          </Button>
-        </div>
-      </div>
+    <div className="h-full bg-gray-50 dark:bg-[#1e2836]">
+      <PageHeader
+        icon={Building}
+        title="Franquicias en Vigor"
+        description={`${filteredFranchises.length} franquicias activas`}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setShowImportDialog(true)} className="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+              <Upload className="mr-2 h-4 w-4" /> Importar CSV
+            </Button>
+            <Button onClick={() => navigate("/franchises/new")} className="bg-red-600 hover:bg-red-700">
+              <Plus className="mr-2 h-4 w-4" /> Nueva Franquicia
+            </Button>
+          </>
+        }
+      />
 
-      {showImportDialog && (
-        <ImportFranchisesDialog
-          isOpen={showImportDialog}
-          onClose={() => setShowImportDialog(false)}
-          onSuccess={fetchFranchises}
-        />
-      )}
-
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar por nombre, contacto, localidad, provincia o código Tesis..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      <div className="p-4 sm:p-8">
+        {showImportDialog && (
+          <ImportFranchisesDialog
+            isOpen={showImportDialog}
+            onClose={() => setShowImportDialog(false)}
+            onSuccess={fetchFranchises}
           />
-        </div>
-      </div>
+        )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Franquicias Activas</CardTitle>
-          <CardDescription>
-            Listado de franquicias que han firmado contrato
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-              <span>Cargando franquicias...</span>
-            </div>
-          ) : filteredFranchises.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchTerm
-                ? "No se encontraron franquicias con esos criterios"
-                : "No hay franquicias registradas"}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredFranchises.map((franchise) => (
-                <Card
-                  key={franchise.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/franchises/${franchise.id}`)}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {franchise.name}
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          {franchise.contact_person}
-                        </CardDescription>
-                      </div>
-                      <Badge variant="outline" className="ml-2">
-                        {franchise.tesis_code || "Sin código"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start">
-                        <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar por nombre, contacto, localidad, provincia o código Tesis..."
+              className="pl-8 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <Card className="dark:bg-[#1e2836] dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="dark:text-white">Franquicias Activas</CardTitle>
+            <CardDescription className="dark:text-gray-400">
+              Listado de franquicias que han firmado contrato
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+                <span className="dark:text-white">Cargando franquicias...</span>
+              </div>
+            ) : filteredFranchises.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground dark:text-gray-400">
+                {searchTerm
+                  ? "No se encontraron franquicias con esos criterios"
+                  : "No hay franquicias registradas"}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredFranchises.map((franchise) => (
+                  <Card
+                    key={franchise.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700"
+                    onClick={() => navigate(`/franchises/${franchise.id}`)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
                         <div>
-                          <p>{franchise.address}</p>
-                          <p>
-                            {franchise.city}, {franchise.province}
-                          </p>
+                          <CardTitle className="text-lg dark:text-white">
+                            {franchise.name}
+                          </CardTitle>
+                          <CardDescription className="mt-1 dark:text-gray-400">
+                            {franchise.contact_person}
+                          </CardDescription>
                         </div>
+                        <Badge variant="outline" className="ml-2 dark:border-gray-600 dark:text-gray-300">
+                          {franchise.tesis_code || "Sin código"}
+                        </Badge>
                       </div>
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>{franchise.phone}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>{franchise.email}</span>
-                      </div>
-                      {franchise.website && (
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-start">
+                          <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+                          <div className="dark:text-gray-300">
+                            <p>{franchise.address}</p>
+                            <p>
+                              {franchise.city}, {franchise.province}
+                            </p>
+                          </div>
+                        </div>
                         <div className="flex items-center">
-                          <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <a
-                            href={
-                              franchise.website.startsWith("http")
-                                ? franchise.website
-                                : `https://${franchise.website}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {franchise.website.replace(/^https?:\/\//i, "")}
-                          </a>
+                          <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="dark:text-gray-300">{franchise.phone}</span>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="dark:text-gray-300">{franchise.email}</span>
+                        </div>
+                        {franchise.website && (
+                          <div className="flex items-center">
+                            <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <a
+                              href={
+                                franchise.website.startsWith("http")
+                                  ? franchise.website
+                                  : `https://${franchise.website}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {franchise.website.replace(/^https?:\/\//i, "")}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
