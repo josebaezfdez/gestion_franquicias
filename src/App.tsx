@@ -28,6 +28,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RoleProvider } from "@/contexts/RoleContext";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -228,6 +229,19 @@ function AppRoutes() {
       />
 
       <Route
+        path="/settings/account"
+        element={
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <SettingsPage />
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
+        }
+      />
+
+      <Route
         path="/settings/users"
         element={
           <ErrorBoundary>
@@ -254,19 +268,21 @@ function App() {
       <ReactQueryProvider>
         <BrowserRouter>
           <AuthProvider>
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center min-h-screen">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando...</p>
+            <RoleProvider>
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+                      <p className="mt-4 text-gray-600">Cargando...</p>
+                    </div>
                   </div>
-                </div>
-              }
-            >
-              <AppRoutes />
-            </Suspense>
-            <Toaster />
+                }
+              >
+                <AppRoutes />
+              </Suspense>
+              <Toaster />
+            </RoleProvider>
           </AuthProvider>
         </BrowserRouter>
       </ReactQueryProvider>

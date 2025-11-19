@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../../supabase/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +52,9 @@ import {
 import { PageHeader } from "@/components/ui/page-header";
 import { User as UserIcon } from "lucide-react";
 import { getStatusColor, getStatusLabel, getScoreColor, getSourceChannelLabel } from "@/utils/leadHelpers";
+import { useLead } from "@/hooks/useQueries";
+import { useRole } from "@/contexts/RoleContext";
+import { supabase } from "@/lib/supabase";
 
 type Lead = {
   id: string;
@@ -96,9 +98,8 @@ type Lead = {
 export default function LeadDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [lead, setLead] = useState<Lead | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { data: lead, isLoading: loading, refetch } = useLead(id || "");
+  const { role: userRole } = useRole();
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
@@ -118,271 +119,29 @@ export default function LeadDetail() {
   const [isDeletingCommunication, setIsDeletingCommunication] = useState(false);
   const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
 
-  useEffect(() => {
-    async function checkUserRole() {
-      try {
-        const { data, error } = await supabase.rpc("get_current_user_role");
-
-        if (error) {
-          console.error("Error checking user role:", error);
-          return;
-        }
-
-        setUserRole(data);
-      } catch (error) {
-        console.error("Error in checkUserRole:", error);
-      }
-    }
-
-    checkUserRole();
-  }, []);
-
-  useEffect(() => {
-    if (id) {
-      fetchLeadDetails(id);
-    }
-  }, [id]);
-
-  async function fetchLeadDetails(leadId: string) {
-    try {
-      setLoading(true);
-      console.log("Fetching lead details for ID:", leadId);
-
-      // Force refresh the data from the server with no cache
-      await supabase.auth.refreshSession();
-
-      // Clear any potential cache by using a timestamp parameter
-      const timestamp = new Date().getTime();
-      console.log(`Fetching with cache-busting timestamp: ${timestamp}`);
-
-      const { data, error } = await supabase
-        .from("leads")
-        .select(
-          `
-          *,
-          lead_details(*),
-          lead_status_history(id, status, created_at, notes, created_by),
-          communications(id, type, content, created_at, created_by)
-        `,
-        )
-        .eq("id", leadId)
-        .single();
-
-      console.log("Raw lead data from database:", data);
-      console.log("Raw lead_details from database:", data?.lead_details);
-
-      if (error) {
-        console.error("Error fetching lead:", error);
-        throw error;
-      }
-
-      console.log("Lead data fetched:", data);
-      console.log("Lead details:", data.lead_details);
-
-      // Sort status history by created_at in descending order
-      const sortedStatusHistory = data.lead_status_history
-        ? data.lead_status_history.sort(
-            (a, b) =>
-              new Date(b.created_at || Date.now()).getTime() -
-              new Date(a.created_at || Date.now()).getTime(),
-          )
-        : [];
-
-      // Sort communications by created_at in descending order
-      const sortedCommunications = data.communications
-        ? data.communications.sort(
-            (a, b) =>
-              new Date(b.created_at || Date.now()).getTime() -
-              new Date(a.created_at || Date.now()).getTime(),
-          )
-        : [];
-
-      // Add empty users object to each status and communication
-      const statusWithUsers = sortedStatusHistory.map((status) => ({
-        ...status,
-        users: null,
-      }));
-
-      const communicationsWithUsers = sortedCommunications.map((comm) => ({
-        ...comm,
-        users: null,
-      }));
-
-      console.log("Processed status history:", statusWithUsers);
-      console.log("Processed communications:", communicationsWithUsers);
-
-      // Ensure lead_details has all properties even if they're null
-      // Handle lead_details as an array or single object
-      const leadDetails =
-        Array.isArray(data.lead_details) && data.lead_details.length > 0
-          ? data.lead_details[0]
-          : data.lead_details || {};
-
-      const normalizedLeadDetails = {
-        previous_experience:
-          leadDetails.previous_experience !== null &&
-          leadDetails.previous_experience !== undefined
-            ? leadDetails.previous_experience
-            : "",
-        additional_comments:
-          leadDetails.additional_comments !== null &&
-          leadDetails.additional_comments !== undefined
-            ? leadDetails.additional_comments
-            : "",
-        investment_capacity:
-          leadDetails.investment_capacity !== null &&
-          leadDetails.investment_capacity !== undefined &&
-          leadDetails.investment_capacity !== ""
-            ? leadDetails.investment_capacity
-            : "no",
-        source_channel:
-          leadDetails.source_channel !== null &&
-          leadDetails.source_channel !== undefined &&
-          leadDetails.source_channel !== ""
-            ? leadDetails.source_channel
-            : "website",
-        interest_level:
-          leadDetails.interest_level !== null &&
-          leadDetails.interest_level !== undefined
-            ? leadDetails.interest_level
-            : 3,
-        score:
-          leadDetails.score !== null && leadDetails.score !== undefined
-            ? leadDetails.score
-            : 0,
-      };
-
-      const processedLead = {
-        ...data,
-        lead_details: normalizedLeadDetails,
-        lead_status_history: statusWithUsers,
-        communications: communicationsWithUsers,
-      };
-
-      console.log("Processed lead data:", processedLead);
-      setLead(processedLead);
-    } catch (error) {
-      console.error("Error fetching lead details:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los detalles del lead",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function getStatusColor(status: string) {
-    switch (status) {
-      case "new_contact":
-        return "bg-blue-100 text-blue-800";
-      case "first_contact":
-        return "bg-purple-100 text-purple-800";
-      case "info_sent":
-        return "bg-indigo-100 text-indigo-800";
-      case "interview_scheduled":
-        return "bg-yellow-100 text-yellow-800";
-      case "interview_completed":
-        return "bg-orange-100 text-orange-800";
-      case "proposal_sent":
-        return "bg-pink-100 text-pink-800";
-      case "negotiation":
-        return "bg-red-100 text-red-800";
-      case "contract_signed":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  }
-
-  function getScoreColor(score: number) {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 50) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
-  }
-
-  function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString();
-  }
-
-  function formatDateTime(dateString: string) {
-    return new Date(dateString).toLocaleString();
-  }
-
-  function getStatusLabel(status: string) {
-    switch (status) {
-      case "new_contact":
-        return "Nuevo Contacto";
-      case "first_contact":
-        return "Primer Contacto";
-      case "info_sent":
-        return "Información Enviada";
-      case "interview_scheduled":
-        return "Entrevista Programada";
-      case "interview_completed":
-        return "Entrevista Completada";
-      case "proposal_sent":
-        return "Propuesta Enviada";
-      case "negotiation":
-        return "Negociación";
-      case "contract_signed":
-        return "Contrato Firmado";
-      case "rejected":
-        return "Rechazado";
-      default:
-        return status;
-    }
-  }
-
-  function getCommunicationTypeLabel(type: string) {
-    switch (type) {
-      case "call":
-        return "Llamada";
-      case "email":
-        return "Email";
-      case "meeting":
-        return "Reunión";
-      case "training":
-        return "Formación";
-      default:
-        return type;
-    }
-  }
-
-  function handleLeadDeleted() {
-    toast({
-      title: "Lead eliminado",
-      description: "El lead ha sido eliminado correctamente.",
-    });
-    navigate("/leads/list");
-  }
-
   function handleLeadUpdated() {
     setShowEditForm(false);
-    fetchLeadDetails(id!);
+    refetch();
   }
 
   function handleTaskAdded() {
     setShowAddTaskDialog(false);
-    fetchLeadDetails(id!);
+    refetch();
   }
 
   function handleCommunicationAdded() {
     setShowAddCommunicationDialog(false);
-    fetchLeadDetails(id!);
+    refetch();
     setActiveTab("communications");
   }
 
-  async function handleDeleteCommunication(communicationId: string) {
+  async function handleDeleteCommunication() {
     try {
       setIsDeletingCommunication(true);
       const { error } = await supabase
         .from("communications")
         .delete()
-        .eq("id", communicationId);
+        .eq("id", communicationToDelete);
 
       if (error) throw error;
 
@@ -391,7 +150,7 @@ export default function LeadDetail() {
         description: "La comunicación ha sido eliminada correctamente.",
       });
 
-      fetchLeadDetails(id!);
+      refetch();
       setShowDeleteCommunicationDialog(false);
       setCommunicationToDelete(null);
     } catch (error) {
@@ -405,6 +164,38 @@ export default function LeadDetail() {
     } finally {
       setIsDeletingCommunication(false);
     }
+  }
+
+  function handleLeadDeleted() {
+    navigate("/leads/list");
+  }
+
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  function formatDateTime(dateString: string) {
+    return new Date(dateString).toLocaleString("es-ES", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function getCommunicationTypeLabel(type: string) {
+    const labels: Record<string, string> = {
+      email: "Email",
+      phone: "Teléfono",
+      meeting: "Reunión",
+      note: "Nota",
+    };
+    return labels[type] || type;
   }
 
   if (loading) {
@@ -502,7 +293,7 @@ export default function LeadDetail() {
             currentStatus={lead.lead_status_history[0]?.status || "new_contact"}
             isOpen={showUpdateStatusDialog}
             onClose={() => setShowUpdateStatusDialog(false)}
-            onSuccess={() => fetchLeadDetails(id!)}
+            onSuccess={() => refetch()}
           />
         )}
 
@@ -533,7 +324,7 @@ export default function LeadDetail() {
               setCommunicationToEdit(null);
             }}
             onSuccess={() => {
-              fetchLeadDetails(id!);
+              refetch();
               setActiveTab("communications");
             }}
           />
@@ -559,7 +350,7 @@ export default function LeadDetail() {
                 onClick={(e) => {
                   e.preventDefault();
                   if (communicationToDelete) {
-                    handleDeleteCommunication(communicationToDelete);
+                    handleDeleteCommunication();
                   }
                 }}
                 disabled={isDeletingCommunication}
@@ -828,7 +619,7 @@ export default function LeadDetail() {
                   <CardContent>
                     <TasksList
                       leadId={lead.id}
-                      onTasksChange={fetchLeadDetails.bind(null, lead.id)}
+                      onTasksChange={() => refetch()}
                     />
                   </CardContent>
                 </Card>

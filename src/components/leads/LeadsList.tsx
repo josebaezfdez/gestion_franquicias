@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../../../supabase/supabase";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +37,8 @@ import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { es } from "date-fns/locale";
 import { getStatusColor, getStatusLabel, getScoreColor, getSourceChannelLabel } from "@/utils/leadHelpers";
+import { useLeads } from "@/hooks/useQueries";
+import { useRole } from "@/contexts/RoleContext";
 
 type Lead = {
   id: string;
@@ -63,9 +64,8 @@ type SortOption = {
 };
 
 export default function LeadsList() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { data: leads = [], isLoading: loading } = useLeads();
+  const { role: userRole } = useRole();
   const [searchTerm, setSearchTerm] = useState("");
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -78,68 +78,20 @@ export default function LeadsList() {
   });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    async function checkUserRole() {
-      try {
-        const { data, error } = await supabase.rpc("get_current_user_role");
+  // Process leads to get latest status
+  const processedLeads = leads.map((lead) => {
+    const sortedStatusHistory = lead.lead_status_history?.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    ) || [];
 
-        if (error) {
-          console.error("Error checking user role:", error);
-          return;
-        }
+    return {
+      ...lead,
+      lead_status_history: sortedStatusHistory,
+    };
+  });
 
-        setUserRole(data);
-      } catch (error) {
-        console.error("Error in checkUserRole:", error);
-      }
-    }
-
-    checkUserRole();
-  }, []);
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  async function fetchLeads() {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("leads")
-        .select(
-          `
-          *,
-          lead_details(*),
-          lead_status_history(status, created_at)
-        `,
-        )
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Process the data to get the latest status for each lead
-      const processedLeads = data.map((lead) => {
-        // Sort status history by created_at in descending order
-        const sortedStatusHistory = lead.lead_status_history.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
-
-        return {
-          ...lead,
-          lead_status_history: sortedStatusHistory,
-        };
-      });
-
-      setLeads(processedLeads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const filteredLeads = leads
+  const filteredLeads = processedLeads
     .filter(
       (lead) =>
         (lead.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

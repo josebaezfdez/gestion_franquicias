@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../../../supabase/supabase";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useTasks } from "@/hooks/useQueries";
 
 type Task = {
   id: string;
@@ -48,48 +49,14 @@ type Task = {
 };
 
 export default function TasksListPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: tasks = [], isLoading: loading, refetch } = useTasks();
   const [searchTerm, setSearchTerm] = useState("");
   const [completingTask, setCompletingTask] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  async function fetchTasks() {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("tasks")
-        .select(
-          `
-          *,
-          lead:lead_id(full_name, email)
-        `,
-        )
-        .order("due_date", { ascending: true });
-
-      if (error) throw error;
-
-      setTasks(data || []);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las tareas",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleTaskCompletion(taskId: string, completed: boolean) {
     setCompletingTask(taskId);
     try {
-      // Actualizar la fecha de completado si la tarea se marca como completada
       const updateData = completed
         ? { completed, completed_at: new Date().toISOString() }
         : { completed, completed_at: null };
