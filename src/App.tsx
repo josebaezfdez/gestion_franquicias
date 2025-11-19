@@ -17,11 +17,17 @@ import LeadDetail from "@/components/leads/LeadDetail";
 import LeadDashboard from "@/components/leads/LeadDashboard";
 import LeadPipeline from "@/components/leads/LeadPipeline";
 import TasksListPage from "@/components/leads/TasksListPage";
+import FranchisesLayout from "@/components/franchises";
+import FranchisesList from "@/components/franchises/FranchisesList";
+import FranchiseForm from "@/components/franchises/FranchiseForm";
+import FranchiseDetail from "@/components/franchises/FranchiseDetail";
 import SettingsPage from "@/components/settings/SettingsPage";
 import UserManagement from "@/components/settings/UserManagement";
 import PermissionGuard from "@/components/auth/PermissionGuard";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { ReactQueryProvider } from "@/lib/react-query-provider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -69,80 +75,170 @@ function AppRoutes() {
       <Route
         path="/login"
         element={
-          <PublicRoute>
-            <LoginForm />
-          </PublicRoute>
+          <ErrorBoundary>
+            <PublicRoute>
+              <LoginForm />
+            </PublicRoute>
+          </ErrorBoundary>
         }
       />
+
       <Route
         path="/signup"
         element={
-          <PublicRoute>
-            <SignUpForm />
-          </PublicRoute>
+          <ErrorBoundary>
+            <PublicRoute>
+              <SignUpForm />
+            </PublicRoute>
+          </ErrorBoundary>
         }
       />
-      <Route path="/success" element={<Success />} />
+
+      <Route
+        path="/success"
+        element={
+          <ErrorBoundary>
+            <PublicRoute>
+              <Success />
+            </PublicRoute>
+          </ErrorBoundary>
+        }
+      />
 
       {/* Leads Routes */}
       <Route
         path="/leads"
         element={
-          <PrivateRoute>
-            <AppLayout>
-              <LeadsLayout />
-            </AppLayout>
-          </PrivateRoute>
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <LeadsLayout />
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
         }
       >
         <Route index element={<Navigate to="/leads/dashboard" replace />} />
         <Route path="dashboard" element={<LeadDashboard />} />
         <Route path="list" element={<LeadsList />} />
+        <Route path="pipeline" element={<LeadPipeline />} />
+        <Route path="tasks" element={<TasksListPage />} />
         <Route
           path="new"
           element={
-            <PermissionGuard allowedRoles={["superadmin", "admin", "user"]}>
+            <PermissionGuard allowedRoles={["superadmin", "admin"]}>
               <LeadForm />
             </PermissionGuard>
           }
         />
-        <Route path="pipeline" element={<LeadPipeline />} />
-        <Route path="tasks" element={<TasksListPage />} />
       </Route>
 
       <Route
         path="/leads/:id"
         element={
-          <PrivateRoute>
-            <AppLayout>
-              <LeadDetail />
-            </AppLayout>
-          </PrivateRoute>
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <LeadDetail />
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
+        }
+      />
+
+      <Route
+        path="/leads/edit/:id"
+        element={
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <PermissionGuard allowedRoles={["superadmin", "admin"]}>
+                  <LeadForm />
+                </PermissionGuard>
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
+        }
+      />
+
+      {/* Franchises Routes */}
+      <Route
+        path="/franchises"
+        element={
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <FranchisesLayout />
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
+        }
+      >
+        <Route index element={<FranchisesList />} />
+        <Route
+          path="new"
+          element={
+            <PermissionGuard allowedRoles={["superadmin", "admin"]}>
+              <FranchiseForm />
+            </PermissionGuard>
+          }
+        />
+      </Route>
+
+      <Route
+        path="/franchises/:id"
+        element={
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <FranchiseDetail />
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
+        }
+      />
+
+      <Route
+        path="/franchises/edit/:id"
+        element={
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <PermissionGuard allowedRoles={["superadmin", "admin"]}>
+                  <FranchiseForm />
+                </PermissionGuard>
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
         }
       />
 
       {/* Settings Routes */}
-      <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
       <Route
-        path="/settings/account"
+        path="/settings"
         element={
-          <PrivateRoute>
-            <AppLayout>
-              <SettingsPage />
-            </AppLayout>
-          </PrivateRoute>
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <SettingsPage />
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
         }
       />
+
       <Route
         path="/settings/users"
         element={
-          <PrivateRoute>
-            <AppLayout>
-              <PermissionGuard allowedRoles={["superadmin", "admin"]}>
-                <UserManagement />
-              </PermissionGuard>
-            </AppLayout>
-          </PrivateRoute>
+          <ErrorBoundary>
+            <PrivateRoute>
+              <AppLayout>
+                <PermissionGuard allowedRoles={["superadmin"]}>
+                  <UserManagement />
+                </PermissionGuard>
+              </AppLayout>
+            </PrivateRoute>
+          </ErrorBoundary>
         }
       />
 
@@ -152,31 +248,29 @@ function AppRoutes() {
   );
 }
 
-function AppContent() {
-  return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando aplicación...</p>
-        </div>
-      </div>
-    }>
-      <AppRoutes />
-      <Toaster />
-    </Suspense>
-  );
-}
-
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light">
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <ReactQueryProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center min-h-screen">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Cargando...</p>
+                  </div>
+                </div>
+              }
+            >
+              <AppRoutes />
+            </Suspense>
+            <Toaster />
+          </AuthProvider>
+        </BrowserRouter>
+      </ReactQueryProvider>
+    </ThemeProvider>
   );
 }
 

@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/ui/page-header";
 import { User as UserIcon } from "lucide-react";
+import { getStatusColor, getStatusLabel, getScoreColor, getSourceChannelLabel } from "@/utils/leadHelpers";
 
 type Lead = {
   id: string;

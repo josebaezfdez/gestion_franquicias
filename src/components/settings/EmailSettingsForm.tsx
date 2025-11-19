@@ -147,13 +147,13 @@ export default function EmailSettingsForm() {
         title: "Email de prueba enviado",
         description: `Se ha enviado un email de prueba a ${testEmailAddress}`,
       });
-    } catch (error: any) {
-      console.error("Error sending test email:", error);
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Ha ocurrido un problema al enviar el email de prueba. Por favor, verifica la configuración.";
       toast({
         title: "Error al enviar email de prueba",
-        description:
-          error.message ||
-          "Ha ocurrido un problema al enviar el email de prueba. Por favor, verifica la configuración.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -80,14 +80,13 @@ export default function FranchiseForm({ isEdit = false }: FranchiseFormProps) {
         const { data, error } = await supabase.rpc("get_current_user_role");
 
         if (error) {
-          console.error("Error checking user role:", error);
           return;
         }
 
         setUserRole(data);
         setIsAuthorized(data === "superadmin" || data === "admin");
       } catch (error) {
-        console.error("Error in checkUserRole:", error);
+        // Error handled silently
       }
     }
 

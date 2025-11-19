@@ -69,14 +69,13 @@ export default function FranchiseDetail() {
         const { data, error } = await supabase.rpc("get_current_user_role");
 
         if (error) {
-          console.error("Error checking user role:", error);
           return;
         }
 
         setUserRole(data);
         setIsAuthorized(data === "superadmin" || data === "admin");
       } catch (error) {
-        console.error("Error in checkUserRole:", error);
+        // Error handled silently
       }
     }
 
@@ -99,7 +98,7 @@ export default function FranchiseDetail() {
 
       setFranchise(data);
     } catch (error) {
-      console.error("Error fetching franchise data:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error al cargar los datos de la franquicia";
       toast({
         title: "Error",
         description: "No se pudieron cargar los datos de la franquicia",
@@ -127,7 +126,7 @@ export default function FranchiseDetail() {
 
       navigate("/franchises");
     } catch (error) {
-      console.error("Error deleting franchise:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error al eliminar la franquicia";
       toast({
         title: "Error",
         description: "No se pudo eliminar la franquicia",

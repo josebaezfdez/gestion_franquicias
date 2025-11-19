@@ -72,11 +72,11 @@ export default function AddUserDialog({
       setRole("user");
       onSuccess();
       onClose();
-    } catch (error: any) {
-      console.error("Error creating user:", error);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "No se pudo crear el usuario";
       toast({
         title: "Error",
-        description: error.message || "No se pudo crear el usuario",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

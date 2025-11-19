@@ -27,9 +27,9 @@ export default function LoginForm() {
     try {
       await signIn(email, password);
       navigate("/leads/dashboard");
-    } catch (error: any) {
-      console.error("Error de inicio de sesión:", error);
-      setError(error.message || "Correo electrónico o contraseña inválidos");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Correo electrónico o contraseña inválidos";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

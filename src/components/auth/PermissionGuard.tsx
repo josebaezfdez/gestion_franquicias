@@ -36,14 +36,12 @@ export default function PermissionGuard({
         const { data, error } = await supabase.rpc("get_current_user_role");
 
         if (error) {
-          console.error("Error checking user role:", error);
           setUserRole(null);
         } else {
           setUserRole(data);
           setHasPermission(data && allowedRoles.includes(data));
         }
       } catch (error) {
-        console.error("Error in checkUserRole:", error);
         setUserRole(null);
       } finally {
         setLoading(false);

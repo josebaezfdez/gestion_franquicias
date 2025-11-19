@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, TrendingUp, MapPin, BarChart, Activity, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
+import { getStatusColor, getStatusLabel, getScoreColor, getSourceChannelLabel } from "@/utils/leadHelpers";
 
 type DashboardStats = {
   totalLeads: number;
@@ -234,85 +235,8 @@ export default function LeadDashboard() {
     }
   }
 
-  function getStatusColor(status: string) {
-    switch (status) {
-      case "new_contact":
-        return "bg-blue-100 text-blue-800";
-      case "first_contact":
-        return "bg-purple-100 text-purple-800";
-      case "info_sent":
-        return "bg-indigo-100 text-indigo-800";
-      case "interview_scheduled":
-        return "bg-yellow-100 text-yellow-800";
-      case "interview_completed":
-        return "bg-orange-100 text-orange-800";
-      case "proposal_sent":
-        return "bg-pink-100 text-pink-800";
-      case "negotiation":
-        return "bg-red-100 text-red-800";
-      case "contract_signed":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  }
-
-  function getScoreColor(score: number) {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 50) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
-  }
-
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString();
-  }
-
-  function getStatusLabel(status: string) {
-    switch (status) {
-      case "new_contact":
-        return "Nuevo Contacto";
-      case "first_contact":
-        return "Primer Contacto";
-      case "info_sent":
-        return "Información Enviada";
-      case "interview_scheduled":
-        return "Entrevista Programada";
-      case "interview_completed":
-        return "Entrevista Completada";
-      case "proposal_sent":
-        return "Propuesta Enviada";
-      case "negotiation":
-        return "Negociación";
-      case "contract_signed":
-        return "Contrato Firmado";
-      case "rejected":
-        return "Rechazado";
-      default:
-        return status;
-    }
-  }
-
-  function getSourceChannelLabel(source: string | undefined) {
-    if (!source || source === "" || source === null) return "Desconocido";
-
-    switch (source) {
-      case "website":
-        return "Sitio Web";
-      case "referral":
-        return "Referencia";
-      case "social_media":
-        return "Redes Sociales";
-      case "event":
-        return "Evento";
-      case "advertisement":
-        return "Publicidad";
-      case "other":
-        return "Otro";
-      default:
-        return source;
-    }
   }
 
   if (loading) {

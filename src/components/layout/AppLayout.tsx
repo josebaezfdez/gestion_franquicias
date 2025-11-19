@@ -28,6 +28,7 @@ import {
   GitBranch,
   Menu,
   X,
+  Store,
 } from "lucide-react";
 import RoleIndicator from "../auth/RoleIndicator";
 import { useTheme } from "@/lib/theme-provider";
@@ -171,6 +172,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
             >
               <ListTodo className="w-5 h-5" />
               <span className="ml-4">Mis Tareas</span>
+            </Link>
+
+            <Link
+              to="/franchises"
+              className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                isActive("/franchises")
+                  ? "bg-red-600 text-white shadow-lg"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Store className="w-5 h-5" />
+              <span className="ml-4">Franquicias</span>
             </Link>
 
             {(userRole === "superadmin" || userRole === "admin") && (

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+build
+.next
+out
+
+# Tempo specific
+src/tempobook
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.local
+.env.production.local
+
+# IDE
+.vscode
+.idea
+
+# Supabase
+supabase/.temp
